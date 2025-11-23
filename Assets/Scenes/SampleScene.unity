@@ -224,8 +224,64 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00e9afc55cc9c0f4ea4b1e37692cd517, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  moveSpeed: 5
+  championData: {fileID: 0}
+  currentState: 0
   mainCamera: {fileID: 519420031}
+  moveAction:
+    m_Name: Move
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: ff88ca6e-3917-485f-b4b7-c0b40d7311f3
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  dashAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 6eefdcc8-87f7-442f-ab0b-d890b2a7d3a5
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  blockAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 5902b711-139c-426f-926f-f86608737543
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  primaryAbilityAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 013cab4d-d561-46db-9fd7-5ed310c1ebd5
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  signatureAbilityAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: b9ea87e3-9777-40c1-9ce2-5e78d07c526a
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  meleeAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 7c99ab1c-2c2c-4b36-a104-859fee1c11e6
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  mousePos: {x: 0, y: 0}
 --- !u!70 &333313282
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
