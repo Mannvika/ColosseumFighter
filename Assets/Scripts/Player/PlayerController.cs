@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+using Unity.Netcode;
 public enum PlayerState
 {
     Normal,
@@ -13,16 +13,14 @@ public enum PlayerState
     Stunned
 }
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : NetworkBehaviour
 {
     [Header("Champion")]
     public Champion championData;
 
     [Header("State")]
     public PlayerState currentState = PlayerState.Normal;
-
-    [Header("Components")]
-    public Camera mainCamera;
+    private Camera mainCamera;
     private Rigidbody2D rb;
 
     [Header("Input Setup")]
@@ -57,6 +55,12 @@ public class PlayerController : MonoBehaviour
         primaryAbilityAction.Disable();
         signatureAbilityAction.Disable();
         meleeAction.Disable();
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        if(!IsOwner) return;
+        mainCamera = Camera.main;
     }
 
     void Start()
@@ -104,6 +108,8 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(!IsOwner) return;
+
         moveInput = moveAction.ReadValue<Vector2>();
 
         if(Mouse.current != null)
@@ -115,6 +121,7 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if(!IsOwner) return;
         if (currentState == PlayerState.Normal)
         {
             rb.linearVelocity = moveInput * championData.moveSpeed;

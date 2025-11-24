@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: abd86a7df4d281a4bb2eff69437ef6db, type: 3}
+  m_Script: {fileID: 11500000, guid: fe0741ca7223c7042ac5c3bdda0383f3, type: 3}
   m_Name: Proto_DashAbility
   m_EditorClassIdentifier: Assembly-CSharp::DashAbility
-  cooldown: 0
-  dashDistance: 5
-  dashTime: 0.2
+  cooldown: 0.75
+  dashDistance: 3
+  dashTime: 0.1

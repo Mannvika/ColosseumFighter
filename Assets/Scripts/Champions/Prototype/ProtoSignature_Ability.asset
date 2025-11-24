@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: ProtoSignature_Ability
   m_EditorClassIdentifier: Assembly-CSharp::SignatureAbility
   cooldown: 0
-  damage: 0
+  damage: 67
   range: 0
