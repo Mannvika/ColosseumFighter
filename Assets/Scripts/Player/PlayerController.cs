@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 public enum PlayerState
 {
     Normal,
+    Attacking,
     Dashing,
     Blocking,
     UsingPrimaryAbility,
