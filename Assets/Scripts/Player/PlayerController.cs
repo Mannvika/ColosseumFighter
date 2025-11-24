@@ -81,7 +81,11 @@ public class PlayerController : MonoBehaviour
         blockAction.performed += ctx => TryUseAbility(championData.blockAbility, PlayerState.Blocking);
         blockAction.canceled += ctx => 
         { 
-            if(championData.blockAbility != null) championData.blockAbility.EndAbility(this); 
+            if(currentState == PlayerState.Blocking)
+            {
+                if(championData.blockAbility != null) championData.blockAbility.EndAbility(this); 
+                currentState = PlayerState.Normal;
+            }
         };
 
         // Dash (Space)
@@ -141,8 +145,14 @@ public class PlayerController : MonoBehaviour
     public void TryUseAbility(AbilityBase ability, PlayerState activeState)
     {
         if (ability == null) return;
-        if (currentState != PlayerState.Normal && currentState != PlayerState.Blocking) return;
+        
+        if (!CanTransitionTo(activeState)) return;
         if (IsAbilityOnCooldown(ability)) return;
+
+        if (currentState == PlayerState.Blocking && activeState != PlayerState.Blocking)
+        {
+            championData.blockAbility.EndAbility(this);
+        }
 
         if (activeState != PlayerState.Normal)
         {
@@ -159,6 +169,32 @@ public class PlayerController : MonoBehaviour
         {
             return Time.time < cooldowns[ability];
         }
+        return false;
+    }
+
+    private bool CanTransitionTo(PlayerState newState)
+    {
+        if (newState == PlayerState.Normal) return true;
+
+        switch (currentState)
+        {
+            case PlayerState.Normal:
+                return true;
+
+            case PlayerState.Blocking:
+                if (newState == PlayerState.Dashing) return false;
+                if(newState == PlayerState.Blocking) return true;
+                if (newState == PlayerState.UsingPrimaryAbility) return true;
+                if (newState == PlayerState.UsingSignatureAbility) return true;
+                return false;
+
+            case PlayerState.Dashing:
+            case PlayerState.UsingPrimaryAbility:
+            case PlayerState.UsingSignatureAbility:
+            case PlayerState.Stunned:
+                return false;
+        }
+
         return false;
     }
 }
