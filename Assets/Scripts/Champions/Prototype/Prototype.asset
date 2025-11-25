@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Prototype
   m_EditorClassIdentifier: Assembly-CSharp::Champion
   championName: Prototype
-  maxHealth: 0
+  maxHealth: 100
   moveSpeed: 5
   blockMoveMultiplier: 0.46
   attackDamage: 0

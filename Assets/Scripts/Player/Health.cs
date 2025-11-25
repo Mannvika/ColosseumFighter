@@ -1,0 +1,40 @@
+using UnityEngine;
+using Unity.Netcode;
+
+public class Health : NetworkBehaviour, IDamageable
+{
+    public NetworkVariable<float> currentHealth = new NetworkVariable<float>(
+        100f,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
+
+    public override void OnNetworkSpawn()
+    {
+        currentHealth.OnValueChanged += OnHealthChanged;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        currentHealth.OnValueChanged -= OnHealthChanged;
+    }
+
+    public void TakeDamage(float amount)
+    {
+        if(!IsServer) return;
+
+        currentHealth.Value -= amount;
+
+        Debug.Log($"[Server] {gameObject.name} took {amount} damage. HP: {currentHealth.Value}");
+
+        if (currentHealth.Value <= 0)
+        {
+            Debug.Log($"[Server] {gameObject.name} has DIED.");
+        }
+    }
+
+    private void OnHealthChanged(float oldHealth, float newHealth)
+    {
+        Debug.Log($"[Client] My health went from {oldHealth} to {newHealth}");
+    }
+}

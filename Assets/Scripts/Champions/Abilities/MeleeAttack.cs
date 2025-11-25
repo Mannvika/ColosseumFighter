@@ -1,4 +1,5 @@
 using UnityEngine;
+using Unity.Netcode;
 
 [CreateAssetMenu(fileName = "MeleeAttack", menuName = "Scriptable Objects/MeleeAttack")]
 public class MeleeAttack : AbilityBase
@@ -7,23 +8,41 @@ public class MeleeAttack : AbilityBase
     public float offsetDistance;
     public Vector2 hitboxSize;
     public LayerMask hitLayers;
-    public override void Activate(PlayerController parent)
+    public override void Activate(PlayerController parent, bool isServer)
     {
-        parent.currentState = PlayerState.Attacking;
-        Vector2 origin = (Vector2)parent.transform.position + (Vector2)(parent.transform.forward * offsetDistance);
-        Collider2D[] hits = Physics2D.OverlapBoxAll(origin, hitboxSize, parent.transform.eulerAngles.z, hitLayers);
+        Debug.Log("Attacked");
 
-        foreach (var hit in hits)
+        Vector2 origin = GetOrigin(parent);
+        DebugExtensions.DrawBox(origin, hitboxSize, parent.transform.eulerAngles.z, Color.red, 0.2f);
+
+        if(isServer)
         {
-            if (hit.gameObject == parent.gameObject) continue; // Skip self
-            Debug.Log("Hit " + hit.gameObject.name + " for " + damage + " damage.");
+            PerformServerHitCheck(parent, origin);
         }
-
-        DebugExtensions.DrawBox(origin, hitboxSize, parent.transform.eulerAngles.z, Color.red, 0.5f);
-        EndAbility(parent);
     }
 
-    public override void EndAbility(PlayerController parent)
+    private void PerformServerHitCheck(PlayerController parent, Vector2 origin)
+    {
+        Collider2D[] hits = Physics2D.OverlapBoxAll(origin, hitboxSize, parent.transform.eulerAngles.z, hitLayers);
+
+        foreach(var hit in hits)
+        {
+            if(hit.gameObject == parent.gameObject) continue;
+
+            if(hit.TryGetComponent<IDamageable>(out IDamageable target))
+            {
+                target.TakeDamage(damage);
+                Debug.Log($"[Server] Hit {hit.name} for {damage}");            
+            }
+        }
+    }
+
+    private Vector2 GetOrigin(PlayerController parent)
+    {
+        return (Vector2)parent.transform.position + ((Vector2)parent.transform.up * offsetDistance);
+    }
+
+    public override void EndAbility(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
         Debug.Log("Melee attack ended.");

@@ -7,7 +7,7 @@ public class DashAbility : AbilityBase
     public float dashSpeed = 20f;
     public float dashDuration = 0.2f;
 
-    public override void Activate(PlayerController parent)
+    public override void Activate(PlayerController parent, bool isServer)
     {
         Vector2 dashDir = parent.CurrentMovementDirection.normalized;
 
@@ -17,11 +17,11 @@ public class DashAbility : AbilityBase
         }
 
         parent.currentState = PlayerState.Dashing;
-        parent.StartCoroutine(DashRoutine(parent, dashDir));
+        parent.StartCoroutine(DashRoutine(parent, dashDir, isServer));
     }
 
 
-    IEnumerator DashRoutine(PlayerController parent, Vector2 dir)
+    IEnumerator DashRoutine(PlayerController parent, Vector2 dir, bool isServer)
     {
         Rigidbody2D rb = parent.GetComponent<Rigidbody2D>();
         float startTime = Time.time;
@@ -35,10 +35,10 @@ public class DashAbility : AbilityBase
         }
 
         rb.linearVelocity = Vector2.zero;
-        EndAbility(parent);
+        EndAbility(parent, isServer);
     }
 
-    public override void EndAbility(PlayerController parent)
+    public override void EndAbility(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
     }

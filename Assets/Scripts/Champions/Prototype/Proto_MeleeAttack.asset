@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MeleeAttack
   cooldown: 0
   damage: 23
-  offsetDistance: 32.6
-  hitboxSize: {x: 1, y: 1}
+  offsetDistance: 0
+  hitboxSize: {x: 2, y: 2}
   hitLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 64

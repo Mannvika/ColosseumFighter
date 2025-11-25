@@ -30,6 +30,7 @@ public class PlayerController : NetworkBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         _inputHandler = GetComponent<PlayerInputHandler>();
+        GetComponent<Health>().currentHealth.Value = championData.maxHealth;
     }
 
     private Dictionary<AbilityBase, float> cooldowns = new Dictionary<AbilityBase, float>();
@@ -68,7 +69,7 @@ public class PlayerController : NetworkBehaviour
             rb.linearVelocity = input.Movement * (championData.moveSpeed * championData.blockMoveMultiplier);
             if(!input.IsBlockPressed)
             {
-                if(championData.blockAbility != null) championData.blockAbility.EndAbility(this); 
+                if(championData.blockAbility != null) championData.blockAbility.EndAbility(this, IsServer); 
             }
         }
         else
@@ -93,7 +94,7 @@ public class PlayerController : NetworkBehaviour
 
         if (currentState == PlayerState.Blocking && activeState != PlayerState.Blocking)
         {
-            championData.blockAbility.EndAbility(this);
+            championData.blockAbility.EndAbility(this, IsServer);
         }
 
         if (activeState != PlayerState.Normal)
@@ -101,7 +102,7 @@ public class PlayerController : NetworkBehaviour
             currentState = activeState;
         }
 
-        ability.Activate(this);
+        ability.Activate(this, IsServer);
         cooldowns[ability] = Time.time + ability.cooldown;    
     }
 
