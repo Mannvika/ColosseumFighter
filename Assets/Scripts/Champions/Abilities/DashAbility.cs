@@ -1,42 +1,45 @@
 using UnityEngine;
+using System.Collections;
 
 [CreateAssetMenu(fileName = "DashAbility", menuName = "Scriptable Objects/DashAbility")]
 public class DashAbility : AbilityBase
 {
-    public float dashDistance = 5f;
-    public float dashTime = 0.2f;
+    public float dashSpeed = 20f;
+    public float dashDuration = 0.2f;
 
     public override void Activate(PlayerController parent)
     {
-        parent.StartCoroutine(DashCoroutine(parent));
+        Vector2 dashDir = parent.CurrentMovementDirection.normalized;
+
+        if (dashDir == Vector2.zero)
+        {
+            dashDir = parent.transform.up;
+        }
+
+        parent.currentState = PlayerState.Dashing;
+        parent.StartCoroutine(DashRoutine(parent, dashDir));
+    }
+
+
+    IEnumerator DashRoutine(PlayerController parent, Vector2 dir)
+    {
+        Rigidbody2D rb = parent.GetComponent<Rigidbody2D>();
+        float startTime = Time.time;
+
+        while (Time.time < startTime + dashDuration)
+        {
+
+            rb.linearVelocity = dir * dashSpeed; 
+            
+            yield return new WaitForFixedUpdate();
+        }
+
+        rb.linearVelocity = Vector2.zero;
+        EndAbility(parent);
     }
 
     public override void EndAbility(PlayerController parent)
     {
         parent.currentState = PlayerState.Normal;
     }
-
-    System.Collections.IEnumerator DashCoroutine(PlayerController parent)
-    {
-        Vector2 dashDirection = parent.MoveInput.normalized;
-        if (dashDirection == Vector2.zero)
-        {
-            dashDirection = Vector2.up;
-        }
-
-        Vector2 startPosition = parent.transform.position;
-        Vector2 targetPosition = startPosition + dashDirection * dashDistance;
-        float elapsedTime = 0f;
-
-        while (elapsedTime < dashTime)
-        {
-            parent.transform.position = Vector2.Lerp(startPosition, targetPosition, (elapsedTime / dashTime));
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-
-        parent.transform.position = targetPosition;
-        EndAbility(parent);
-    }
-
 }
