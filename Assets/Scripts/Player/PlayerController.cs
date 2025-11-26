@@ -8,6 +8,7 @@ public enum PlayerState
     Attacking,
     Dashing,
     Blocking,
+    Firing,
     UsingPrimaryAbility,
     UsingSignatureAbility,
     Stunned
@@ -63,6 +64,18 @@ public class PlayerController : NetworkBehaviour
             {
                 TryUseAbility(championData.meleeAttack, PlayerState.Normal);
             }
+            if (input.IsProjectilePressed)
+            {
+                TryUseAbility(championData.projectileAbility, PlayerState.Firing);
+            }
+            if(input.IsPrimaryAbilityPressed)
+            {
+                TryUseAbility(championData.primaryAbility, PlayerState.UsingPrimaryAbility);
+            }
+            if(input.IsSignatureAbilityPressed)
+            {
+                TryUseAbility(championData.signatureAbility, PlayerState.UsingSignatureAbility);
+            }
         }
         else if (currentState == PlayerState.Blocking)
         {
@@ -70,6 +83,14 @@ public class PlayerController : NetworkBehaviour
             if(!input.IsBlockPressed)
             {
                 if(championData.blockAbility != null) championData.blockAbility.EndAbility(this, IsServer); 
+            }
+        }
+        else if (currentState == PlayerState.Firing)
+        {
+            rb.linearVelocity = input.Movement * (championData.moveSpeed * championData.fireMoveMultiplier);
+            if (!input.IsProjectilePressed)
+            {
+                if(championData.projectileAbility != null) championData.projectileAbility.EndAbility(this, IsServer);
             }
         }
         else
@@ -125,10 +146,7 @@ public class PlayerController : NetworkBehaviour
                 return true;
 
             case PlayerState.Blocking:
-                if (newState == PlayerState.Dashing) return false;
                 if (newState == PlayerState.Blocking) return true;
-                if (newState == PlayerState.UsingPrimaryAbility) return true;
-                if (newState == PlayerState.UsingSignatureAbility) return true;
                 return false;
 
             case PlayerState.Dashing:

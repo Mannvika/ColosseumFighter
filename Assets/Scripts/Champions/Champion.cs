@@ -7,17 +7,14 @@ public class Champion : ScriptableObject
     public float maxHealth;
     public float moveSpeed;
     public float blockMoveMultiplier;
+    public float fireMoveMultiplier;
     public float attackDamage;
 
     [Header("Abilities")]
-    // Dash
     public AbilityBase dashAbility;
-    // Block
     public AbilityBase blockAbility;
-    // Melee Attack
     public AbilityBase meleeAttack;
-    // E
     public AbilityBase primaryAbility;
-    // Q
     public AbilityBase signatureAbility;
+    public AbilityBase projectileAbility;
 }

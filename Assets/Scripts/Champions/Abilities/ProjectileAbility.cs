@@ -8,15 +8,14 @@ public class ProjectileAbility : AbilityBase
     public float damage;
     public override void Activate(PlayerController parent, bool isServer)
     {
-        parent.currentState = PlayerState.UsingPrimaryAbility;
+        parent.currentState = PlayerState.Firing;
         /*GameObject projectile = Instantiate(projectilePrefab, parent.transform.position + parent.transform.forward, Quaternion.identity);
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
         if (rb != null)
         {
             rb.velocity = parent.transform.forward * projectileSpeed;
         }*/
-        Debug.Log("Launched a projectile dealing " + damage + " damage.");
-        EndAbility(parent, isServer);
+        Debug.Log("Launching a projectile dealing " + damage + " damage.");
     }
 
     public override void EndAbility(PlayerController parent, bool isServer)

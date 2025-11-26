@@ -9,11 +9,16 @@ public class PlayerInputHandler : NetworkBehaviour
     public InputAction meleeAction;
     public InputAction blockAction;
     public InputAction dashAction;
-    
+    public InputAction projAction;
+    public InputAction primaryAction;
+    public InputAction signatureAction;
+
     public PlayerNetworkInputData CurrentInput;
 
     private bool _meleePressedLastFrame = false;
     private bool _dashPressedLastFrame = false;
+    private bool _primaryPressedLastFrame = false;
+    private bool _signaturePressedLastFrame = false;
     private Camera _mainCamera;
 
     public override void OnNetworkSpawn()
@@ -40,6 +45,14 @@ public class PlayerInputHandler : NetworkBehaviour
         {
             _dashPressedLastFrame = true;
         }
+        if(primaryAction.WasPerformedThisFrame())
+        {
+            _primaryPressedLastFrame = true;
+        }
+        if(signatureAction.WasPerformedThisFrame())
+        {
+            _signaturePressedLastFrame = true;
+        }
 
         CurrentInput = new PlayerNetworkInputData
         {
@@ -47,6 +60,9 @@ public class PlayerInputHandler : NetworkBehaviour
             IsMeleePressed = meleeAction.IsPressed() || _meleePressedLastFrame,
             IsBlockPressed = blockAction.IsPressed(),           
             IsDashPressed = dashAction.WasPerformedThisFrame() || _dashPressedLastFrame,
+            IsPrimaryAbilityPressed = primaryAction.WasPerformedThisFrame() || _primaryPressedLastFrame,
+            IsSignatureAbilityPressed = signatureAction.WasPerformedThisFrame() || _signaturePressedLastFrame,
+            IsProjectilePressed = projAction.IsPressed(),
             MousePosition = GetMouseWorldPosition()
         };
     }
@@ -55,6 +71,8 @@ public class PlayerInputHandler : NetworkBehaviour
     {
         _meleePressedLastFrame = false;
         _dashPressedLastFrame = false;
+        _primaryPressedLastFrame = false;
+        _signaturePressedLastFrame = false;
     }
 
     private Vector2 GetMouseWorldPosition()
@@ -69,6 +87,9 @@ public class PlayerInputHandler : NetworkBehaviour
         meleeAction.Enable();
         blockAction.Enable();
         dashAction.Enable();
+        projAction.Enable();
+        primaryAction.Enable();
+        signatureAction.Enable();
     }
 
     private void DisableInputs()
@@ -77,6 +98,9 @@ public class PlayerInputHandler : NetworkBehaviour
         meleeAction.Disable();
         blockAction.Disable();
         dashAction.Disable();
+        projAction.Disable();
+        primaryAction.Disable();
+        signatureAction.Disable();
     }
     
     private void OnDisable()

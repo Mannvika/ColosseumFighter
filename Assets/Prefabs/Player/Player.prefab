@@ -320,7 +320,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: ead14005-4c4d-40b4-a8f1-37e3a78df1e8
-      m_Path: <Mouse>/leftButton
+      m_Path: <Keyboard>/v
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -359,6 +359,57 @@ MonoBehaviour:
       m_Processors: 
       m_Groups: 
       m_Action: Dash
+      m_Flags: 0
+    m_Flags: 0
+  projAction:
+    m_Name: Proj
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 2e310184-6e6c-4f5b-a2dd-529db6c63c11
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: eacd99cc-0630-45a5-9a75-ca4b458bb388
+      m_Path: <Mouse>/leftButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Proj
+      m_Flags: 0
+    m_Flags: 0
+  primaryAction:
+    m_Name: Primary
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 9ac297fb-a11d-45c6-bc59-83c913f1f256
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 5f30273b-1922-4386-8e6d-883737981c46
+      m_Path: <Keyboard>/e
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Primary
+      m_Flags: 0
+    m_Flags: 0
+  signatureAction:
+    m_Name: Signature
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 81f989aa-e6d7-4100-ac68-5f2a02ad318f
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 1a50de3b-359a-4e14-b1a6-5cd5445e37ed
+      m_Path: <Keyboard>/q
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Signature
       m_Flags: 0
     m_Flags: 0
 --- !u!114 &8119172291975326487
