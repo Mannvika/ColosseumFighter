@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18d7615ff104ecb4ca5de1594887c122, type: 3}
   m_Name: Proto_ProjAbility
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileAbility
-  cooldown: 3
-  projectilePrefab: {fileID: 0}
+  cooldown: 0
+  projectilePrefab: {fileID: 3010768630430416674, guid: 91b69baef25660545a9d89c2ca581a1f, type: 3}
   projectileSpeed: 5
   damage: 0
+  fireRate: 1

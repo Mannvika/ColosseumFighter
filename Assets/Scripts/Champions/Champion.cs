@@ -16,5 +16,5 @@ public class Champion : ScriptableObject
     public AbilityBase meleeAttack;
     public AbilityBase primaryAbility;
     public AbilityBase signatureAbility;
-    public AbilityBase projectileAbility;
+    public ProjectileAbility projectileAbility;
 }

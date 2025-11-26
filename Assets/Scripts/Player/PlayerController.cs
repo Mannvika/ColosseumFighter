@@ -87,7 +87,13 @@ public class PlayerController : NetworkBehaviour
         }
         else if (currentState == PlayerState.Firing)
         {
+            
             rb.linearVelocity = input.Movement * (championData.moveSpeed * championData.fireMoveMultiplier);
+            Debug.Log($"[Controller] State is Firing. Input: {input.IsProjectilePressed}");
+            if(championData.projectileAbility != null)
+            {
+                championData.projectileAbility.ProcessHold(this, IsServer);
+            }
             if (!input.IsProjectilePressed)
             {
                 if(championData.projectileAbility != null) championData.projectileAbility.EndAbility(this, IsServer);
@@ -127,7 +133,7 @@ public class PlayerController : NetworkBehaviour
         cooldowns[ability] = Time.time + ability.cooldown;    
     }
 
-    private bool IsAbilityOnCooldown(AbilityBase ability)
+    public bool IsAbilityOnCooldown(AbilityBase ability)
     {
         if (cooldowns.ContainsKey(ability))
         {
@@ -135,6 +141,12 @@ public class PlayerController : NetworkBehaviour
         }
         return false;
     }
+
+    public void SetAbilityCooldown(AbilityBase ability, float cooldown)
+    {
+        cooldowns[ability] = Time.time + cooldown;
+    }
+
 
     private bool CanTransitionTo(PlayerState newState)
     {
