@@ -15,6 +15,6 @@ public class Champion : ScriptableObject
     public AbilityBase blockAbility;
     public AbilityBase meleeAttack;
     public AbilityBase primaryAbility;
-    public AbilityBase signatureAbility;
+    public SignatureAbility signatureAbility;
     public RangedAttack projectileAbility;
 }

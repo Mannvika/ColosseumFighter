@@ -25,7 +25,14 @@ public class PlayerController : NetworkBehaviour
     private PlayerInputHandler _inputHandler;
     private Rigidbody2D rb;
 
-    [HideInInspector] public Vector2 CurrentMovementDirection;
+    [HideInInspector] 
+    public Vector2 CurrentMovementDirection;
+
+    public NetworkVariable<float> currentSignatureCharge = new NetworkVariable<float>(
+        0f,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
 
     public override void OnNetworkSpawn()
     {
@@ -48,6 +55,13 @@ public class PlayerController : NetworkBehaviour
     {
         CurrentMovementDirection = input.Movement;
         RotatePlayerTowardsMouse(input.MousePosition);
+
+        if(championData != null && championData.signatureAbility != null)
+        {
+            if(!IsServer) return;
+            currentSignatureCharge.Value = Mathf.Min(currentSignatureCharge.Value + championData.signatureAbility.chargePerSecond * Time.deltaTime, championData.signatureAbility.maxCharge);
+            
+        }
 
         if (currentState == PlayerState.Normal)
         {
@@ -124,11 +138,6 @@ public class PlayerController : NetworkBehaviour
             championData.blockAbility.EndAbility(this, IsServer);
         }
 
-        if (activeState != PlayerState.Normal)
-        {
-            currentState = activeState;
-        }
-
         ability.Activate(this, IsServer);
         cooldowns[ability] = Time.time + ability.cooldown;    
     }
@@ -146,8 +155,6 @@ public class PlayerController : NetworkBehaviour
     {
         cooldowns[ability] = Time.time + cooldown;
     }
-
-
     private bool CanTransitionTo(PlayerState newState)
     {
         if (newState == PlayerState.Normal) return true;
@@ -170,4 +177,20 @@ public class PlayerController : NetworkBehaviour
 
         return false;
     }
+
+    public void OnDamageDealt(float damage)
+    {
+        currentSignatureCharge.Value = Mathf.Min(currentSignatureCharge.Value + damage * championData.signatureAbility.chargePerDamageDealt, championData.signatureAbility.maxCharge);
+    }
+
+    public float GetCurrentCharge()
+    {
+        return currentSignatureCharge.Value;
+    }
+
+    public void ResetCharge()
+    {
+        currentSignatureCharge.Value = 0f;
+    }
 }
+

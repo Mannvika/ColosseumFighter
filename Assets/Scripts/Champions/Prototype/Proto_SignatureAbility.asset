@@ -15,3 +15,7 @@ MonoBehaviour:
   cooldown: 0
   damage: 67
   range: 0
+  maxCharge: 50
+  chargePerSecond: 5
+  chargePerDamageDealt: 0
+  chargePerDamageTaken: 0
