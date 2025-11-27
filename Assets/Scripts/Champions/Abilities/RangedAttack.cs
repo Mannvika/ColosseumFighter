@@ -1,22 +1,32 @@
 using Unity.Netcode;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "RangedAttack", menuName = "Scriptable Objects/Abilities/ProjectileAbility")]
-public class ProjectileAbility : AbilityBase
+[CreateAssetMenu(fileName = "RangedAttack", menuName = "Scriptable Objects/RangedAttack")]
+public class RangedAttack : AbilityBase
 {
     public GameObject projectilePrefab;
     public float projectileSpeed;
     public float damage;
+    public float fireRate;
     public override void Activate(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Firing;
+
+    }
+
+    public void ProcessHold(PlayerController parent, bool isServer)
+    {
+        Debug.Log($"[Ability] Checking Cooldown... OnCooldown: {IsOnCooldown(parent)}");
+        if(IsOnCooldown(parent)) return;
+
+        SetCooldown(parent, fireRate);
+
         if(isServer)
         {
             Debug.Log("[Ability] SERVER Attempting to Spawn"); 
             SpawnProjectile(parent);
         }
-        else{ Debug.Log("Shot Projectile"); }
-        EndAbility(parent, isServer);
+        else{ Debug.Log("Shooting"); }
     }
 
     private void SpawnProjectile(PlayerController parent)
@@ -31,5 +41,15 @@ public class ProjectileAbility : AbilityBase
     {
         parent.currentState = PlayerState.Normal;
         Debug.Log("Projectile ability ended.");
+    }
+
+    private bool IsOnCooldown(PlayerController parent)
+    {
+        return parent.IsAbilityOnCooldown(this);
+    }
+
+    private void SetCooldown(PlayerController parent, float cooldown)
+    {
+        parent.SetAbilityCooldown(this, cooldown);
     }
 }
