@@ -1,31 +1,34 @@
 using UnityEngine;
+using System.Collections;
+
 
 [CreateAssetMenu(fileName = "SignatureAbility", menuName = "Scriptable Objects/Ability/SignatureAbility")]
-public class SignatureAbility : AbilityBase
+public abstract class SignatureAbility : AbilityBase
 {
-    public float damage;
-    public float range;
     public float maxCharge;
     public float chargePerSecond;
     public float chargePerDamageDealt;
     public float chargePerDamageTaken;
-
     public override void Activate(PlayerController parent, bool isServer)
     {
         if (parent.GetCurrentCharge() < maxCharge) return;
-
-        parent.currentState = PlayerState.UsingSignatureAbility;
-        Debug.Log("Signature ability activated, dealing " + damage + " damage.");
         
-        // TODO: Implement signature ability logic here.
+        parent.StartCoroutine(SignatureRoutine(parent, isServer));
+    }
 
-        if (isServer) parent.ResetCharge();
-
+    public virtual IEnumerator SignatureRoutine(PlayerController parent, bool isServer)
+    {
+        yield return new WaitForFixedUpdate();
         EndAbility(parent, isServer);
     }
 
+
     public override void EndAbility(PlayerController parent, bool isServer)
     {
+        if(!isServer)
+        {
+            parent.ResetCharge();
+        }
         parent.currentState = PlayerState.Normal;
         Debug.Log("Signature ability ended.");
     }

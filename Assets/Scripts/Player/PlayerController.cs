@@ -180,6 +180,8 @@ public class PlayerController : NetworkBehaviour
 
     public void OnDamageDealt(float damage)
     {
+        if(!IsServer) return;
+
         currentSignatureCharge.Value = Mathf.Min(currentSignatureCharge.Value + damage * championData.signatureAbility.chargePerDamageDealt, championData.signatureAbility.maxCharge);
     }
 
@@ -190,7 +192,10 @@ public class PlayerController : NetworkBehaviour
 
     public void ResetCharge()
     {
-        currentSignatureCharge.Value = 0f;
+        if(IsServer)
+        {
+            currentSignatureCharge.Value = 0f;
+        }
     }
 }
 
