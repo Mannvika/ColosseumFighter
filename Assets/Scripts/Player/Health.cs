@@ -27,9 +27,13 @@ public class Health : NetworkBehaviour, IDamageable
 
         // Temp get related player controller object and increase charge
         PlayerController parent = GetComponent<PlayerController>();
-        if(parent != null)
+        if(parent != null && parent.championData.signatureAbility != null && parent.championData.signatureAbility != null)
         {
              parent.currentSignatureCharge.Value = Mathf.Min(parent.currentSignatureCharge.Value + amount * parent.championData.signatureAbility.chargePerDamageTaken, parent.championData.signatureAbility.maxCharge);
+        }
+        else
+        {
+            
         }
 
         Debug.Log($"[Server] {gameObject.name} took {amount} damage. HP: {currentHealth.Value}");

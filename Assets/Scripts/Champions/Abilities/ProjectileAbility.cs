@@ -23,7 +23,7 @@ public class ProjectileAbility : AbilityBase
     {
         Vector2 spawnPosition = (Vector2)parent.transform.position + ((Vector2)parent.transform.up * 1f);
         GameObject projectile = Instantiate(projectilePrefab, spawnPosition, parent.transform.rotation);
-        projectile.GetComponent<NetworkProjectile>().speed = projectileSpeed;
+        projectile.GetComponent<NetworkProjectile>().speed.Value = projectileSpeed;
         projectile.GetComponent<NetworkProjectile>().damage = damage;
         projectile.GetComponent<NetworkObject>().Spawn();
     }

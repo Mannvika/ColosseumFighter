@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Proto_DashAbility
   m_EditorClassIdentifier: Assembly-CSharp::DashAbility
   cooldown: 0.75
-  dashSpeed: 80
+  dashSpeed: 20
   dashDuration: 0.2

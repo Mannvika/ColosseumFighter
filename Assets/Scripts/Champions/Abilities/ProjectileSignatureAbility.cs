@@ -29,8 +29,10 @@ public class ProjectileSignatureAbility : SignatureAbility
     {
         Vector2 spawnPosition = (Vector2)parent.transform.position + ((Vector2)parent.transform.up * 1f);
         GameObject projectile = Instantiate(projectilePrefab, spawnPosition, parent.transform.rotation);
-        projectile.GetComponent<NetworkProjectile>().speed = projectileSpeed;
-        projectile.GetComponent<NetworkProjectile>().damage = damage;
+        NetworkProjectile proj = projectile.GetComponent<NetworkProjectile>();
+        proj.ShooterId = parent.OwnerClientId;
+        proj.speed.Value = projectileSpeed;
+        proj.damage = damage;
         projectile.GetComponent<NetworkObject>().Spawn();
     }
     

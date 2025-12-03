@@ -38,30 +38,46 @@ public class PlayerController : NetworkBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         _inputHandler = GetComponent<PlayerInputHandler>();
-        GetComponent<Health>().currentHealth.Value = championData.maxHealth;
+
+        if(IsServer)
+        {
+            if(TryGetComponent<Health>(out Health health))
+            {
+                Debug.Log("");
+            }
+        }
     }
 
     private Dictionary<AbilityBase, float> cooldowns = new Dictionary<AbilityBase, float>();
+
+    [ServerRpc]
+    private void ProcessInputServerRpc(PlayerNetworkInputData input)
+    {
+        ProcessPlayerInput(input);
+    }
 
     void FixedUpdate()
     {
         if(!IsOwner) return;
 
         ProcessPlayerInput(_inputHandler.CurrentInput);
+        ProcessInputServerRpc(_inputHandler.CurrentInput);
         _inputHandler.ResetInputs();
+    }
+
+    private void Update()
+    {
+        if (IsServer && championData != null && championData.signatureAbility != null)
+        {
+            float chargeAmount = championData.signatureAbility.chargePerSecond * Time.deltaTime;
+            currentSignatureCharge.Value = Mathf.Min(currentSignatureCharge.Value + chargeAmount, championData.signatureAbility.maxCharge);
+        }
     }
 
     public void ProcessPlayerInput(PlayerNetworkInputData input)
     {
         CurrentMovementDirection = input.Movement;
         RotatePlayerTowardsMouse(input.MousePosition);
-
-        if(championData != null && championData.signatureAbility != null)
-        {
-            if(!IsServer) return;
-            currentSignatureCharge.Value = Mathf.Min(currentSignatureCharge.Value + championData.signatureAbility.chargePerSecond * Time.deltaTime, championData.signatureAbility.maxCharge);
-            
-        }
 
         if (currentState == PlayerState.Normal)
         {
@@ -90,6 +106,10 @@ public class PlayerController : NetworkBehaviour
             {
                 TryUseAbility(championData.signatureAbility, PlayerState.UsingSignatureAbility);
             }
+        }
+        else if (currentState == PlayerState.Dashing)
+        {
+            return;
         }
         else if (currentState == PlayerState.Blocking)
         {

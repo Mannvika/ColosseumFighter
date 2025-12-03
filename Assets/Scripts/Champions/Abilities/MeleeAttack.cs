@@ -21,6 +21,8 @@ public class MeleeAttack : AbilityBase
         {
             PerformServerHitCheck(parent, origin);
         }
+
+        EndAbility(parent, isServer);
     }
 
     private void PerformServerHitCheck(PlayerController parent, Vector2 origin)

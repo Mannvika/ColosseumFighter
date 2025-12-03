@@ -25,7 +25,7 @@ public abstract class SignatureAbility : AbilityBase
 
     public override void EndAbility(PlayerController parent, bool isServer)
     {
-        if(!isServer)
+        if(isServer)
         {
             parent.ResetCharge();
         }
