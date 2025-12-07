@@ -201,7 +201,10 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   championData: {fileID: 11400000, guid: a4b2a9b0f56bf034a852736942898b3c, type: 2}
   currentState: 0
+  POSITION_TOLERANCE: 1
   CurrentMovementDirection: {x: 0, y: 0}
+  currentSignatureCharge:
+    m_InternalValue: 0
 --- !u!114 &-39208097517059577
 MonoBehaviour:
   m_ObjectHideFlags: 0

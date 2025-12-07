@@ -7,26 +7,25 @@ public class RangedAttack : AbilityBase
     public GameObject projectilePrefab;
     public float projectileSpeed;
     public float damage;
-    public float fireRate;
     public override void Activate(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Firing;
-
+        if (isServer)
+        {
+            SpawnProjectile(parent);
+        }
     }
 
     public void ProcessHold(PlayerController parent, bool isServer)
     {
-        Debug.Log($"[Ability] Checking Cooldown... OnCooldown: {IsOnCooldown(parent)}");
         if(IsOnCooldown(parent)) return;
 
-        SetCooldown(parent, fireRate);
+        SetCooldown(parent);
 
         if(isServer)
         {
-            Debug.Log("[Ability] SERVER Attempting to Spawn"); 
             SpawnProjectile(parent);
         }
-        else{ Debug.Log("Shooting"); }
     }
 
     private void SpawnProjectile(PlayerController parent)
@@ -50,8 +49,8 @@ public class RangedAttack : AbilityBase
         return parent.IsAbilityOnCooldown(this);
     }
 
-    private void SetCooldown(PlayerController parent, float cooldown)
+    private void SetCooldown(PlayerController parent)
     {
-        parent.SetAbilityCooldown(this, cooldown);
+        parent.SetAbilityCooldown(this);
     }
 }

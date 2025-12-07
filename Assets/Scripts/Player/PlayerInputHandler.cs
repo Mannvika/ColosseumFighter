@@ -37,33 +37,36 @@ public class PlayerInputHandler : NetworkBehaviour
     {
         if(!IsOwner) return;
 
-        if (meleeAction.WasPerformedThisFrame())
-        {
-            _meleePressedLastFrame = true;
-        }
-        if(dashAction.WasPerformedThisFrame())
-        {
-            _dashPressedLastFrame = true;
-        }
-        if(primaryAction.WasPerformedThisFrame())
-        {
-            _primaryPressedLastFrame = true;
-        }
-        if(signatureAction.WasPerformedThisFrame())
-        {
-            _signaturePressedLastFrame = true;
-        }
+        if (meleeAction.WasPerformedThisFrame()) _meleePressedLastFrame = true;
+        if (dashAction.WasPerformedThisFrame()) _dashPressedLastFrame = true;
+        if (primaryAction.WasPerformedThisFrame()) _primaryPressedLastFrame = true;
+        if (signatureAction.WasPerformedThisFrame()) _signaturePressedLastFrame = true;
+
+        bool isDash = dashAction.WasPerformedThisFrame() || _dashPressedLastFrame;
+        bool isMelee = meleeAction.IsPressed() || _meleePressedLastFrame;
+        bool isPrimary = primaryAction.WasPerformedThisFrame() || _primaryPressedLastFrame;
+        bool isSignature = signatureAction.WasPerformedThisFrame() || _signaturePressedLastFrame;
+        bool isProjectile = projAction.IsPressed(); 
+        bool isBlock = blockAction.IsPressed();     
+
+        // Mapping must match PlayerNetworkInputData helpers:
+        // 0: Dash, 1: Melee, 2: Primary, 3: Sig, 4: Proj, 5: Block
+        
+        byte flags = 0;
+        
+        if (isDash)      flags |= (1 << 0);
+        if (isMelee)     flags |= (1 << 1);
+        if (isPrimary)   flags |= (1 << 2);
+        if (isSignature) flags |= (1 << 3);
+        if (isProjectile) flags |= (1 << 4);
+        if (isBlock)     flags |= (1 << 5);
 
         CurrentInput = new PlayerNetworkInputData
         {
             Movement = moveAction.ReadValue<Vector2>(),
-            IsMeleePressed = meleeAction.IsPressed() || _meleePressedLastFrame,
-            IsBlockPressed = blockAction.IsPressed(),           
-            IsDashPressed = dashAction.WasPerformedThisFrame() || _dashPressedLastFrame,
-            IsPrimaryAbilityPressed = primaryAction.WasPerformedThisFrame() || _primaryPressedLastFrame,
-            IsSignatureAbilityPressed = signatureAction.WasPerformedThisFrame() || _signaturePressedLastFrame,
-            IsProjectilePressed = projAction.IsPressed(),
-            MousePosition = GetMouseWorldPosition()
+            MousePosition = GetMouseWorldPosition(),
+            ButtonFlags = flags,
+            Tick = 0
         };
     }
 
