@@ -3,8 +3,10 @@ using UnityEngine;
 
 public struct PlayerNetworkInputData : INetworkSerializable
 {
+    public int Tick;
     public Vector2 Movement;
     public Vector2 MousePosition;
+    public byte ButtonFlags;
     public bool IsDashPressed; // Default: Space Bar
     public bool IsMeleePressed; // Default: V
     public bool IsPrimaryAbilityPressed; // Default: E
