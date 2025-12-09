@@ -9,6 +9,7 @@ public class Champion : ScriptableObject
     public float blockMoveMultiplier;
     public float fireMoveMultiplier;
     public float attackDamage;
+    public float blockDamageMultiplier;
 
     [Header("Abilities")]
     public DashAbility dashAbility;

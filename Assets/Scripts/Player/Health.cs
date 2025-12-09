@@ -23,11 +23,11 @@ public class Health : NetworkBehaviour, IDamageable
     {
         // Only the server should modify health
         if(!IsServer) return;
+        PlayerController parent = GetComponent<PlayerController>();
 
-        currentHealth.Value -= amount;
+        currentHealth.Value -= amount * parent.GetDamageMultiplier();
 
         // Temp get related player controller object and increase charge
-        PlayerController parent = GetComponent<PlayerController>();
         if(parent != null && parent.championData.signatureAbility != null && parent.championData.signatureAbility != null)
         {
             parent.currentSignatureCharge.Value = Mathf.Min(parent.currentSignatureCharge.Value + amount * parent.championData.signatureAbility.chargePerDamageTaken, parent.championData.signatureAbility.maxCharge);

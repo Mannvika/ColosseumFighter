@@ -389,6 +389,18 @@ public class PlayerController : NetworkBehaviour
         return currentSignatureCharge.Value;
     }
 
+    public float GetDamageMultiplier()
+    {
+        float multiplier = 1f;
+
+        if(currentState == PlayerState.Blocking)
+        {
+            multiplier *= championData.blockDamageMultiplier;
+        }
+
+        return multiplier;
+    }
+
     public void ResetCharge()
     {
         if(IsServer)
