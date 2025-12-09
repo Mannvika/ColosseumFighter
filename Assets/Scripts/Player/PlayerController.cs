@@ -320,10 +320,11 @@ public class PlayerController : NetworkBehaviour
     {
         if (cooldowns.ContainsKey(ability))
         {
-            int thresholdTick = cooldowns[ability];
+            int thresholdTick = _currentTick;
             if (IsServer) thresholdTick += 1;
             return thresholdTick < cooldowns[ability];
         }
+
         return false;
     }
 
