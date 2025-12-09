@@ -22,9 +22,14 @@ public class PlayerController : NetworkBehaviour
     [Header("State")]
     public PlayerState currentState = PlayerState.Normal;
 
+    [Header("Reconciliation")]
+    public float POSITION_TOLERANCE;
+
+    // Buffers for input and state history
     private const int BUFFER_SIZE = 1024;
     private PlayerNetworkInputData[] _inputBuffer = new PlayerNetworkInputData[BUFFER_SIZE];
 
+    // Struct to hold simulation state
     private struct SimulationState
     {
         public Vector2 Position;
@@ -32,24 +37,21 @@ public class PlayerController : NetworkBehaviour
         public PlayerState State;
     }
 
+    // State history buffer
     private SimulationState[] _stateBuffer = new SimulationState[BUFFER_SIZE];
 
+    // Simulation tick tracking
     private int _currentTick = 0;
     private float _timer;
     private const float TICK_RATE = 1f / 60f;
-
-    public float POSITION_TOLERANCE;
-
     private int _stateStartTick;
+
     private Vector2 _dashDirection;
-
-
     private PlayerInputHandler _inputHandler;
     private Rigidbody2D rb;
 
     [HideInInspector] 
     public Vector2 CurrentMovementDirection;
-
     public NetworkVariable<float> currentSignatureCharge = new NetworkVariable<float>(
         0f,
         NetworkVariableReadPermission.Everyone,
@@ -63,11 +65,13 @@ public class PlayerController : NetworkBehaviour
         rb = GetComponent<Rigidbody2D>();
         _inputHandler = GetComponent<PlayerInputHandler>();
 
+        // Set fixed delta time for consistent tick rate
         Time.fixedDeltaTime = TICK_RATE;
     }
 
     void FixedUpdate()
     {
+        // Run simulation ticks based on fixed delta time
         _timer += Time.fixedDeltaTime;
         while (_timer >= TICK_RATE)
         {
@@ -80,6 +84,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (IsServer && championData != null && championData.signatureAbility != null)
         {
+            // Update signature ability charge over time
             float chargeAmount = championData.signatureAbility.chargePerSecond * Time.deltaTime;
             currentSignatureCharge.Value = Mathf.Min(currentSignatureCharge.Value + chargeAmount, championData.signatureAbility.maxCharge);
         }
@@ -89,6 +94,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (IsClient && IsOwner)
         {
+            // Gather input and process simulation
             PlayerNetworkInputData input = _inputHandler.CurrentInput;
             input.Tick = _currentTick;
 
@@ -110,15 +116,16 @@ public class PlayerController : NetworkBehaviour
 
     private void ProcessPlayerSimulation(PlayerNetworkInputData input)
     {
+        // Store input in buffer
         int bufferIndex = input.Tick % BUFFER_SIZE;
         _inputBuffer[bufferIndex] = input;
 
+        // Apply movement and state logic
         RotatePlayerTowardsMouse(input.MousePosition);
-
         ApplyStateLogic(input);
-
         ApplyMovementPhysics(input);
 
+        // Update simulation state buffer
         _stateBuffer[bufferIndex] = new SimulationState
         {
             Position = rb.position,
@@ -131,6 +138,7 @@ public class PlayerController : NetworkBehaviour
     {
         CurrentMovementDirection = input.Movement;
 
+        // Handle state-specific logic
         if(currentState == PlayerState.Dashing)
         {
             float durationInSecs = championData.dashAbility.dashDuration;
@@ -187,6 +195,7 @@ public class PlayerController : NetworkBehaviour
     
     private void ApplyMovementPhysics(PlayerNetworkInputData input)
     {
+        // Determine target velocity based on state and input
         Vector2 targetVelocity = Vector2.zero;
 
         switch (currentState)
@@ -222,9 +231,11 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     private void ProcessInputServerRpc(PlayerNetworkInputData input)
     {
+        // Update server-side simulation
         _currentTick = input.Tick;
         ProcessPlayerSimulation(input);
 
+        // Reconcile with client
         StatePayload statePayload = new StatePayload
         {
             Tick = input.Tick,
@@ -241,24 +252,30 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
+        // Reconcile with server
+
+        // Get predicted state from buffer
         int bufferIndex = serverState.Tick % BUFFER_SIZE;
         SimulationState predictedState = _stateBuffer[bufferIndex];
 
+        // Check for position error
         float positionError = Vector2.Distance(serverState.Position, predictedState.Position);
-        
         float effectiveTolerance = POSITION_TOLERANCE;
         if(currentState == PlayerState.Dashing || serverState.State == PlayerState.Dashing)
         {
             effectiveTolerance *= 2f;
         }
+
         if (positionError > effectiveTolerance)
         {
             Debug.LogWarning($"Reconciling! Error: {positionError}");
 
+            // Correct position and velocity
             rb.position = serverState.Position;
             rb.linearVelocity = serverState.Velocity;
             currentState = serverState.State;
 
+            // Reprocess inputs from the corrected tick
             int tickToReprocess = serverState.Tick + 1;
             while (tickToReprocess < _currentTick)
             {

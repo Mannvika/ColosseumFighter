@@ -3,7 +3,7 @@ using Unity.Netcode;
 
 public class StatePayload : INetworkSerializable
 {
-
+    // State information for a player to be sent over the network
     public int Tick;
     public Vector2 Position;
     public Vector2 Velocity;

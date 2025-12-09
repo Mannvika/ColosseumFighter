@@ -21,6 +21,7 @@ public class Health : NetworkBehaviour, IDamageable
 
     public void TakeDamage(float amount)
     {
+        // Only the server should modify health
         if(!IsServer) return;
 
         currentHealth.Value -= amount;
@@ -29,14 +30,8 @@ public class Health : NetworkBehaviour, IDamageable
         PlayerController parent = GetComponent<PlayerController>();
         if(parent != null && parent.championData.signatureAbility != null && parent.championData.signatureAbility != null)
         {
-             parent.currentSignatureCharge.Value = Mathf.Min(parent.currentSignatureCharge.Value + amount * parent.championData.signatureAbility.chargePerDamageTaken, parent.championData.signatureAbility.maxCharge);
+            parent.currentSignatureCharge.Value = Mathf.Min(parent.currentSignatureCharge.Value + amount * parent.championData.signatureAbility.chargePerDamageTaken, parent.championData.signatureAbility.maxCharge);
         }
-        else
-        {
-            
-        }
-
-        Debug.Log($"[Server] {gameObject.name} took {amount} damage. HP: {currentHealth.Value}");
 
         if (currentHealth.Value <= 0)
         {
