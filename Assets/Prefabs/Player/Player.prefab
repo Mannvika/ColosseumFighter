@@ -173,7 +173,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 657987961
+  GlobalObjectIdHash: 1125332772
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -201,7 +201,8 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   championData: {fileID: 11400000, guid: a4b2a9b0f56bf034a852736942898b3c, type: 2}
   currentState: 0
-  POSITION_TOLERANCE: 0.1
+  POSITION_TOLERANCE: 1
+  FAST_MOVEMENT_MULTIPLIER: 4
   CurrentMovementDirection: {x: 0, y: 0}
   currentSignatureCharge:
     m_InternalValue: 0

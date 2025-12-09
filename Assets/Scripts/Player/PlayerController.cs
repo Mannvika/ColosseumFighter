@@ -24,6 +24,7 @@ public class PlayerController : NetworkBehaviour
 
     [Header("Reconciliation")]
     public float POSITION_TOLERANCE;
+    public float FAST_MOVEMENT_MULTIPLIER = 3f;
 
     // Buffers for input and state history
     private const int BUFFER_SIZE = 1024;
@@ -45,6 +46,7 @@ public class PlayerController : NetworkBehaviour
     private float _timer;
     private const float TICK_RATE = 1f / 60f;
     private int _stateStartTick;
+    private int _lastDashTick;
 
     private Vector2 _dashDirection;
     private PlayerInputHandler _inputHandler;
@@ -141,6 +143,7 @@ public class PlayerController : NetworkBehaviour
         // Handle state-specific logic
         if(currentState == PlayerState.Dashing)
         {
+            _lastDashTick = _currentTick;
             float durationInSecs = championData.dashAbility.dashDuration;
             int durationInTicks = Mathf.CeilToInt(durationInSecs / TICK_RATE);
             if (_currentTick >= _stateStartTick + durationInTicks)
@@ -261,9 +264,13 @@ public class PlayerController : NetworkBehaviour
         // Check for position error
         float positionError = Vector2.Distance(serverState.Position, predictedState.Position);
         float effectiveTolerance = POSITION_TOLERANCE;
-        if(currentState == PlayerState.Dashing || serverState.State == PlayerState.Dashing)
+
+        bool isDashing = currentState == PlayerState.Dashing || serverState.State == PlayerState.Dashing;
+        bool recentlyDashed = (_currentTick - _lastDashTick) <= Mathf.CeilToInt(championData.dashAbility.dashDuration / TICK_RATE) + 5; 
+
+        if(isDashing || recentlyDashed)
         {
-            effectiveTolerance *= 2f;
+            effectiveTolerance *= FAST_MOVEMENT_MULTIPLIER;
         }
 
         if (positionError > effectiveTolerance)
