@@ -42,6 +42,9 @@ public class PlayerController : NetworkBehaviour
 
     public float POSITION_TOLERANCE;
 
+    private int _stateStartTick;
+    private Vector2 _dashDirection;
+
 
     private PlayerInputHandler _inputHandler;
     private Rigidbody2D rb;
@@ -96,6 +99,9 @@ public class PlayerController : NetworkBehaviour
 
             ProcessPlayerSimulation(input);
             ProcessInputServerRpc(input);
+
+            _inputHandler.ResetInputs();
+
             _currentTick++;
         }
         else if (IsServer && !IsOwner)
@@ -125,6 +131,22 @@ public class PlayerController : NetworkBehaviour
 
     private void ApplyStateLogic(PlayerNetworkInputData input)
     {
+        CurrentMovementDirection = input.Movement;
+
+        if(currentState == PlayerState.Dashing)
+        {
+            float durationInSecs = championData.dashAbility.dashDuration;
+            int durationInTicks = Mathf.CeilToInt(durationInSecs / TICK_RATE);
+            Debug.Log("Duration in ticks: " + durationInTicks);
+            Debug.Log("Current Tick: " + _currentTick + " State Start Tick: " + _stateStartTick);
+            Debug.Log("Elapsed Ticks: " + (_currentTick - _stateStartTick));
+            if (_currentTick >= _stateStartTick + durationInTicks)
+            {
+                championData.dashAbility.EndAbility(this, IsServer);
+            }
+            return;
+        }
+
         if (currentState == PlayerState.Blocking)
         {
             if (!input.IsBlockPressed)
@@ -188,6 +210,7 @@ public class PlayerController : NetworkBehaviour
                 break;
 
             case PlayerState.Dashing:
+                targetVelocity = _dashDirection * championData.dashAbility.dashSpeed;
                 break; 
 
             case PlayerState.UsingPrimaryAbility:
@@ -278,8 +301,15 @@ public class PlayerController : NetworkBehaviour
             championData.blockAbility.EndAbility(this, IsServer);
         }
 
+        _stateStartTick = _currentTick;
+
         ability.Activate(this, IsServer);
         SetAbilityCooldown(ability);
+    }
+
+    public void SetDashDirection(Vector2 direction)
+    {
+        _dashDirection = direction;
     }
 
     public bool IsAbilityOnCooldown(AbilityBase ability)

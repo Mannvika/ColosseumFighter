@@ -11,7 +11,7 @@ public class Champion : ScriptableObject
     public float attackDamage;
 
     [Header("Abilities")]
-    public AbilityBase dashAbility;
+    public DashAbility dashAbility;
     public AbilityBase blockAbility;
     public AbilityBase meleeAttack;
     public AbilityBase primaryAbility;
