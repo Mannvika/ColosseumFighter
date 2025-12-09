@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using Unity.Netcode;
-using Unity.VisualScripting;
 public enum PlayerState
 {
     Normal,
@@ -137,9 +135,6 @@ public class PlayerController : NetworkBehaviour
         {
             float durationInSecs = championData.dashAbility.dashDuration;
             int durationInTicks = Mathf.CeilToInt(durationInSecs / TICK_RATE);
-            Debug.Log("Duration in ticks: " + durationInTicks);
-            Debug.Log("Current Tick: " + _currentTick + " State Start Tick: " + _stateStartTick);
-            Debug.Log("Elapsed Ticks: " + (_currentTick - _stateStartTick));
             if (_currentTick >= _stateStartTick + durationInTicks)
             {
                 championData.dashAbility.EndAbility(this, IsServer);
@@ -251,7 +246,12 @@ public class PlayerController : NetworkBehaviour
 
         float positionError = Vector2.Distance(serverState.Position, predictedState.Position);
         
-        if (positionError > POSITION_TOLERANCE)
+        float effectiveTolerance = POSITION_TOLERANCE;
+        if(currentState == PlayerState.Dashing || serverState.State == PlayerState.Dashing)
+        {
+            effectiveTolerance *= 2f;
+        }
+        if (positionError > effectiveTolerance)
         {
             Debug.LogWarning($"Reconciling! Error: {positionError}");
 
@@ -284,6 +284,10 @@ public class PlayerController : NetworkBehaviour
     
     void RotatePlayerTowardsMouse(Vector2 mousePos)
     {
+        if(currentState == PlayerState.Dashing || currentState == PlayerState.Stunned) return;
+
+        if(Vector2.Distance(mousePos, rb.position) < 0.3f) return;
+
         Vector2 lookDir = mousePos - rb.position;
         float angle = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg - 90f;
         rb.rotation = angle;
@@ -316,7 +320,9 @@ public class PlayerController : NetworkBehaviour
     {
         if (cooldowns.ContainsKey(ability))
         {
-            return _currentTick < cooldowns[ability];
+            int thresholdTick = cooldowns[ability];
+            if (IsServer) thresholdTick += 1;
+            return thresholdTick < cooldowns[ability];
         }
         return false;
     }
