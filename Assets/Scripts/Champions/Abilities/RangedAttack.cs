@@ -41,7 +41,7 @@ public class RangedAttack : AbilityBase
     public override void EndAbility(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
-        Debug.Log("Projectile ability ended.");
+        // Debug.Log("Projectile ability ended.");
     }
 
     private bool IsOnCooldown(PlayerController parent)

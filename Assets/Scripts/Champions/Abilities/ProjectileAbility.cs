@@ -12,10 +12,13 @@ public class ProjectileAbility : AbilityBase
         parent.currentState = PlayerState.UsingPrimaryAbility;
         if(isServer)
         {
-            Debug.Log("[Ability] SERVER Attempting to Spawn"); 
+            // Debug.Log("[Ability] SERVER Attempting to Spawn"); 
             SpawnProjectile(parent);
         }
-        else{ Debug.Log("Shot Projectile"); }
+        else
+        { 
+            // Debug.Log("Shot Projectile"); 
+        }
         EndAbility(parent, isServer);
     }
 
@@ -30,6 +33,6 @@ public class ProjectileAbility : AbilityBase
     public override void EndAbility(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
-        Debug.Log("Projectile ability ended.");
+        // Debug.Log("Projectile ability ended.");
     }
 }

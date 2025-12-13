@@ -35,6 +35,7 @@ public class Health : NetworkBehaviour, IDamageable
 
         if (currentHealth.Value <= 0)
         {
+            GameManager.instance.OnPlayerDied(OwnerClientId);
             Debug.Log($"[Server] {gameObject.name} has DIED.");
         }
     }

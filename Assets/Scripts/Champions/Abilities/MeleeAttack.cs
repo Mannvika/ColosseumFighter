@@ -10,7 +10,7 @@ public class MeleeAttack : AbilityBase
     public LayerMask hitLayers;
     public override void Activate(PlayerController parent, bool isServer)
     {
-        Debug.Log("Attacked");
+        // Debug.Log("Attacked");
 
         Vector2 origin = GetOrigin(parent);
         DebugExtensions.DrawBox(origin, hitboxSize, parent.transform.eulerAngles.z, Color.red, 0.2f);
@@ -37,7 +37,7 @@ public class MeleeAttack : AbilityBase
             {
                 target.TakeDamage(damage); 
                 parent.OnDamageDealt(damage);
-                Debug.Log($"[Server] Hit {hit.name} for {damage}");            
+                // Debug.Log($"[Server] Hit {hit.name} for {damage}");            
             }
         }
     }
@@ -50,7 +50,7 @@ public class MeleeAttack : AbilityBase
     public override void EndAbility(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
-        Debug.Log("Melee attack ended.");
+        // Debug.Log("Melee attack ended.");
     }
 }
 

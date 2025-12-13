@@ -30,6 +30,6 @@ public abstract class SignatureAbility : AbilityBase
             parent.ResetCharge();
         }
         parent.currentState = PlayerState.Normal;
-        Debug.Log("Signature ability ended.");
+        //Debug.Log("Signature ability ended.");
     }
 }
