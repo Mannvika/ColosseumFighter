@@ -408,5 +408,26 @@ public class PlayerController : NetworkBehaviour
             currentSignatureCharge.Value = 0f;
         }
     }
+
+    public void SetInputActive(bool active)
+    {
+        if(_inputHandler != null)
+        {
+            _inputHandler.enabled = active;
+
+            if(!active) _inputHandler.ResetInputs();
+        }
+    }
+
+    public void TogglePlayerSpawnState(bool isSpawned)
+    {
+        var sr = GetComponentInChildren<SpriteRenderer>();
+        if(sr != null) sr.enabled = isSpawned;
+
+        var col = GetComponent<Collider2D>();
+        if(col != null) col.enabled = isSpawned;
+
+        SetInputActive(isSpawned);
+    }
 }
 
