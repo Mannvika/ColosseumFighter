@@ -80,6 +80,8 @@ public class PlayerInputHandler : NetworkBehaviour
 
     private Vector2 GetMouseWorldPosition()
     {
+        if(_mainCamera == null) _mainCamera = Camera.main;
+
         if (Mouse.current == null || _mainCamera == null) return Vector2.zero;
         return _mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
     }
@@ -105,7 +107,15 @@ public class PlayerInputHandler : NetworkBehaviour
         primaryAction.Disable();
         signatureAction.Disable();
     }
-    
+
+    private void OnEnable()
+    {
+        if (IsOwner)
+        {
+            EnableInputs();
+        }
+    }
+
     private void OnDisable()
     {
         if (IsOwner)

@@ -35,6 +35,11 @@ public class GameManager : NetworkBehaviour
     {
         currentState.OnValueChanged += OnStateChanged;
 
+        if(IsClient)
+        {
+            OnStateChanged(GameState.WaitingForPlayers, currentState.Value);
+        }
+
         if(IsServer)
         {
             StartCoroutine(GameLoopRoutine());
@@ -53,12 +58,9 @@ public class GameManager : NetworkBehaviour
         InitalizePlayers();
 
         currentState.Value = GameState.Countdown;
-
         yield return new WaitForSeconds(3f);
 
         currentState.Value = GameState.Active;
-
-        currentState.Value = GameState.GameOver;
     }
 
     void InitalizePlayers()
@@ -78,6 +80,7 @@ public class GameManager : NetworkBehaviour
             }
 
             p.TogglePlayerSpawnState(true);
+            p.SetInputActive(false);
 
             index++;
         }
@@ -116,21 +119,27 @@ public class GameManager : NetworkBehaviour
 
     private void OnStateChanged(GameState oldState, GameState newState)
     {
-        if(newState == GameState.Active)
+        if (newState == GameState.Countdown || newState == GameState.Active)
         {
-            if(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject() != null)
+            var allPlayers = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+            foreach(var p in allPlayers)
             {
-                var localPlayer = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<PlayerController>();
-                localPlayer.TogglePlayerSpawnState(true);
+                p.TogglePlayerSpawnState(true);
+                if (newState == GameState.Countdown) p.SetInputActive(false);
             }
         }
 
-        else if(newState == GameState.GameOver)
+        if(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject() != null)
         {
-            if(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject() != null)
+            var localPlayer = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<PlayerController>();
+            
+            if(newState == GameState.Active)
             {
-                var localPlayer = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<PlayerController>();
-                localPlayer.TogglePlayerSpawnState(false);
+                localPlayer.SetInputActive(true);
+            }
+            else if (newState == GameState.GameOver || newState == GameState.Countdown)
+            {
+                localPlayer.SetInputActive(false);
             }
         }
     }

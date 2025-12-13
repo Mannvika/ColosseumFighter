@@ -69,6 +69,20 @@ public class PlayerController : NetworkBehaviour
 
         // Set fixed delta time for consistent tick rate
         Time.fixedDeltaTime = TICK_RATE;
+
+        if(GameManager.instance != null)
+        {
+            GameState state = GameManager.instance.currentState.Value;
+            if(state == GameState.Countdown || state == GameState.Active)
+            {
+                TogglePlayerSpawnState(true);
+
+                if(state == GameState.Countdown)
+                {
+                    SetInputActive(false);
+                }
+            }
+        }
     }
 
     void FixedUpdate()
