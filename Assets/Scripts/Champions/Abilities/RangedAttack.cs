@@ -33,10 +33,17 @@ public class RangedAttack : AbilityBase
         Vector2 spawnPosition = (Vector2)parent.transform.position + ((Vector2)parent.transform.up * 1f);
         GameObject projectile = Instantiate(projectilePrefab, spawnPosition, parent.transform.rotation);
         NetworkProjectile proj = projectile.GetComponent<NetworkProjectile>();
+
+        projectile.GetComponent<NetworkObject>().Spawn();
+
         proj.ShooterId = parent.OwnerClientId;
         proj.speed.Value = projectileSpeed;
         proj.damage = damage;
-        projectile.GetComponent<NetworkObject>().Spawn();
+
+        if(projectile.TryGetComponent<Rigidbody2D>(out Rigidbody2D rigidbody))
+        {
+            rigidbody.linearVelocity = parent.transform.up * projectileSpeed;
+        }
     }
     public override void EndAbility(PlayerController parent, bool isServer)
     {
