@@ -6,6 +6,7 @@ public class Champion : ScriptableObject
     public string championName;
     public float maxHealth;
     public float moveSpeed;
+    public float acceleration = 50f;
     public float blockMoveMultiplier;
     public float fireMoveMultiplier;
     public float attackDamage;

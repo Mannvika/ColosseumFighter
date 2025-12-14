@@ -169,6 +169,10 @@ public class PlayerController : NetworkBehaviour
 
         if (currentState == PlayerState.Blocking)
         {
+            if(input.IsDashPressed)
+            {
+                TryUseAbility(championData.dashAbility, PlayerState.Dashing);
+            }
             if (!input.IsBlockPressed)
             {
                 if (championData.blockAbility != null) championData.blockAbility.EndAbility(this, IsServer);
@@ -177,6 +181,10 @@ public class PlayerController : NetworkBehaviour
         }
         else if (currentState == PlayerState.Firing)
         {
+            if(input.IsDashPressed)
+            {
+                TryUseAbility(championData.dashAbility, PlayerState.Dashing);
+            }
             if (!input.IsProjectilePressed)
             {
                 if (championData.projectileAbility != null) championData.projectileAbility.EndAbility(this, IsServer);
@@ -190,11 +198,11 @@ public class PlayerController : NetworkBehaviour
 
         if (currentState == PlayerState.Normal)
         {
-            if (input.IsBlockPressed)
-                TryUseAbility(championData.blockAbility, PlayerState.Blocking);
-
-            else if (input.IsDashPressed)
+            if (input.IsDashPressed)
                 TryUseAbility(championData.dashAbility, PlayerState.Dashing);
+
+            else if (input.IsBlockPressed)
+                TryUseAbility(championData.blockAbility, PlayerState.Blocking);
 
             else if (input.IsMeleePressed)
                 TryUseAbility(championData.meleeAttack, PlayerState.Attacking);
@@ -227,11 +235,25 @@ public class PlayerController : NetworkBehaviour
                 break;
 
             case PlayerState.Firing:
-                targetVelocity = input.Movement * (championData.moveSpeed * championData.fireMoveMultiplier);
+
+                float speedModifier = 1f;
+
+                // Get the dot product of the Mouse position and the direction we are moving
+                Vector2 aimDir = (input.MousePosition - rb.position).normalized;
+                float dotProduct = Vector2.Dot(input.Movement.normalized, aimDir);
+
+                if(dotProduct < -0.1f)
+                {
+                    speedModifier = championData.fireMoveMultiplier;
+                }
+                
+                targetVelocity = input.Movement * (championData.moveSpeed * speedModifier);
                 break;
 
             case PlayerState.Dashing:
-                targetVelocity = _dashDirection * championData.dashAbility.dashSpeed;
+                float dashProgress = (float)(_currentTick - _stateStartTick) / (championData.dashAbility.dashDuration / TICK_RATE);
+                float currentDashSpeed =  Mathf.Lerp(championData.dashAbility.dashSpeed, 0f, dashProgress);
+                targetVelocity = _dashDirection * currentDashSpeed;
                 break; 
 
             case PlayerState.UsingPrimaryAbility:
@@ -241,7 +263,14 @@ public class PlayerController : NetworkBehaviour
                 break;
         }
 
-        rb.linearVelocity = targetVelocity;
+        float currentAccel = championData.acceleration;
+
+        if(targetVelocity == Vector2.zero)
+        {
+            currentAccel = 10000f;
+        }
+
+        rb.linearVelocity = Vector2.MoveTowards(rb.linearVelocity, targetVelocity, currentAccel * Time.deltaTime);
     }
 
 
@@ -342,6 +371,10 @@ public class PlayerController : NetworkBehaviour
         {
             championData.blockAbility.EndAbility(this, IsServer);
         }
+        else if(currentState == PlayerState.Firing && activeState != PlayerState.Firing)
+        {
+            championData.projectileAbility.EndAbility(this, IsServer);
+        }
 
         _stateStartTick = _currentTick;
 
@@ -380,7 +413,9 @@ public class PlayerController : NetworkBehaviour
             case PlayerState.Normal:
                 return true;
             case PlayerState.Blocking:
-                return newState == PlayerState.Blocking;
+                return newState == PlayerState.Blocking || newState == PlayerState.Dashing;
+            case PlayerState.Firing:
+                return newState == PlayerState.Dashing || newState == PlayerState.Firing;
             case PlayerState.Dashing:
             case PlayerState.UsingPrimaryAbility:
             case PlayerState.UsingSignatureAbility:

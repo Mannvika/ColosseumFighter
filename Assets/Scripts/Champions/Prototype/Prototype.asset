@@ -15,9 +15,11 @@ MonoBehaviour:
   championName: Prototype
   maxHealth: 100
   moveSpeed: 5
+  acceleration: 50
   blockMoveMultiplier: 0.46
-  fireMoveMultiplier: 0.2
-  attackDamage: 0
+  fireMoveMultiplier: 0.6
+  attackDamage: 30
+  blockDamageMultiplier: 0.4
   dashAbility: {fileID: 11400000, guid: ba1990c4237cfd640a7fc246c325adfa, type: 2}
   blockAbility: {fileID: 11400000, guid: 7f02b0174c358d841bb8a42d28e8bb57, type: 2}
   meleeAttack: {fileID: 11400000, guid: 074015f0c68ae014f81e380af6495a8c, type: 2}
