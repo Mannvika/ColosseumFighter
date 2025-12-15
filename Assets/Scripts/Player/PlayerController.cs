@@ -60,12 +60,26 @@ public class PlayerController : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
+    public NetworkVariable<float> currentBlockCharge = new NetworkVariable<float>(
+        0f,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
+    
+    public NetworkVariable<bool> canBlock = new NetworkVariable<bool>(
+        true, 
+        NetworkVariableReadPermission.Everyone, 
+        NetworkVariableWritePermission.Server
+    );
+
     private Dictionary<AbilityBase, int> cooldowns = new Dictionary<AbilityBase, int>();
 
     public override void OnNetworkSpawn()
     {
         rb = GetComponent<Rigidbody2D>();
         _inputHandler = GetComponent<PlayerInputHandler>();
+
+        currentBlockCharge.Value = championData.blockAbility.maxCharge;
 
         // Set fixed delta time for consistent tick rate
         Time.fixedDeltaTime = TICK_RATE;
@@ -103,6 +117,32 @@ public class PlayerController : NetworkBehaviour
             // Update signature ability charge over time
             float chargeAmount = championData.signatureAbility.chargePerSecond * Time.deltaTime;
             currentSignatureCharge.Value = Mathf.Min(currentSignatureCharge.Value + chargeAmount, championData.signatureAbility.maxCharge);
+
+            float blockChargeAmount;
+            if(currentState != PlayerState.Blocking)
+            {
+                blockChargeAmount = championData.blockAbility.chargePerSecond * Time.deltaTime;
+                currentBlockCharge.Value = Mathf.Min(currentBlockCharge.Value + blockChargeAmount, championData.blockAbility.maxCharge);
+
+                if(!canBlock.Value && currentBlockCharge.Value >= championData.blockAbility.maxCharge)
+                {
+                    currentBlockCharge.Value = championData.blockAbility.maxCharge;
+                    canBlock.Value = true;
+                }
+            }
+            else
+            {
+                blockChargeAmount = championData.blockAbility.dischargePerSecond * Time.deltaTime;
+                currentBlockCharge.Value = Mathf.Max(0, currentBlockCharge.Value - blockChargeAmount);
+
+                if(currentBlockCharge.Value <= 0)
+                {
+                    currentBlockCharge.Value = 0f;
+                    canBlock.Value = false;
+                    championData.blockAbility.EndAbility(this, IsServer);
+                }
+            }
+        
         }
     }
 
@@ -232,23 +272,11 @@ public class PlayerController : NetworkBehaviour
                 break;
 
             case PlayerState.Blocking:
-                targetVelocity = input.Movement * (championData.moveSpeed * championData.blockMoveMultiplier);
+                targetVelocity = input.Movement * (championData.moveSpeed * championData.blockAbility.moveMultiplier);
                 break;
 
             case PlayerState.Firing:
-
-                float speedModifier = 1f;
-
-                // Get the dot product of the Mouse position and the direction we are moving
-                Vector2 aimDir = (input.MousePosition - rb.position).normalized;
-                float dotProduct = Vector2.Dot(input.Movement.normalized, aimDir);
-
-                if(dotProduct < -0.1f)
-                {
-                    speedModifier = championData.fireMoveMultiplier;
-                }
-                
-                targetVelocity = input.Movement * (championData.moveSpeed * speedModifier);
+                targetVelocity = input.Movement * (championData.moveSpeed * championData.projectileAbility.moveMultiplier);
                 break;
 
             case PlayerState.Dashing:
@@ -367,7 +395,9 @@ public class PlayerController : NetworkBehaviour
         if (!CanTransitionTo(activeState)) return;
         if (IsAbilityOnCooldown(ability)) return;
 
-        if (currentState == PlayerState.Blocking && activeState != PlayerState.Blocking)
+        if (activeState != PlayerState.Firing && IsAbilityOnCooldown(ability)) return;
+
+        if (currentState == PlayerState.Blocking && activeState != PlayerState.Blocking && canBlock.Value)
         {
             championData.blockAbility.EndAbility(this, IsServer);
         }
@@ -379,7 +409,12 @@ public class PlayerController : NetworkBehaviour
         _stateStartTick = _currentTick;
 
         ability.Activate(this, IsServer);
-        SetAbilityCooldown(ability);
+        
+
+        if (activeState != PlayerState.Firing)
+        {
+            SetAbilityCooldown(ability);
+        }
     }
 
     public void SetDashDirection(Vector2 direction)
@@ -411,9 +446,10 @@ public class PlayerController : NetworkBehaviour
         switch (currentState)
         {
             case PlayerState.Normal:
+                if (newState == PlayerState.Blocking && !canBlock.Value) return false;
                 return true;
             case PlayerState.Blocking:
-                return newState == PlayerState.Blocking || newState == PlayerState.Dashing;
+                return (newState == PlayerState.Blocking && canBlock.Value) || newState == PlayerState.Dashing;
             case PlayerState.Firing:
                 return newState == PlayerState.Dashing || newState == PlayerState.Firing;
             case PlayerState.Dashing:
@@ -444,7 +480,7 @@ public class PlayerController : NetworkBehaviour
 
         if(currentState == PlayerState.Blocking)
         {
-            multiplier *= championData.blockDamageMultiplier;
+            multiplier *= championData.blockAbility.damageMultiplier;
         }
 
         return multiplier;

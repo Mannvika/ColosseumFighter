@@ -7,16 +7,23 @@ public class RangedAttack : AbilityBase
     public GameObject projectilePrefab;
     public float projectileSpeed;
     public float damage;
+    public float moveMultiplier;
     public override void Activate(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Firing;
+
+        if(IsOnCooldown(parent)) return;
+
+
         if (isServer)
         {
             SpawnProjectile(parent);
         }
+
+        SetCooldown(parent);
     }
 
-    public void ProcessHold(PlayerController parent, bool isServer)
+    public override void ProcessHold(PlayerController parent, bool isServer)
     {
         if(IsOnCooldown(parent)) return;
 
