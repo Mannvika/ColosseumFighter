@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4769ae62ac4746345818556d8be3682e, type: 3}
   m_Name: Ranged_MeleeAttack
   m_EditorClassIdentifier: Assembly-CSharp::MeleeAttack
-  cooldown: 0.4
-  damage: 12
+  cooldown: 0.2
+  damage: 4
   offsetDistance: 0
   hitboxSize: {x: 2, y: 2}
   hitLayers:

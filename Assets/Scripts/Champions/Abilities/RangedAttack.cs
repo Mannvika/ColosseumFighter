@@ -45,7 +45,24 @@ public class RangedAttack : AbilityBase
 
         proj.ShooterId = parent.OwnerClientId;
         proj.speed.Value = projectileSpeed;
-        proj.damage = damage;
+
+        float finalDamage = damage;
+
+        if(parent.boostShotsRemaining > 0)
+        {
+            finalDamage += parent.rangedDamageIncrease;
+            parent.boostShotsRemaining--;
+
+            if(parent.boostShotsRemaining <= 0)
+            {
+                parent.rangedDamageIncrease = 0f;
+                parent.boostShotsRemaining = -1;
+            }
+
+            // REFACTOR
+            parent.SetAbilityCooldown(parent.championData.primaryAbility);
+        }
+        proj.damage = finalDamage;
 
         if(projectile.TryGetComponent<Rigidbody2D>(out Rigidbody2D rigidbody))
         {

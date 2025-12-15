@@ -13,3 +13,8 @@ MonoBehaviour:
   m_Name: Ranged_Block
   m_EditorClassIdentifier: Assembly-CSharp::BlockAbility
   cooldown: 0
+  moveMultiplier: 0.5
+  damageMultiplier: 0.2
+  maxCharge: 100
+  chargePerSecond: 5
+  dischargePerSecond: 15

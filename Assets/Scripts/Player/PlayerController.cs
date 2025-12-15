@@ -77,6 +77,9 @@ public class PlayerController : NetworkBehaviour
 
     public event Action<AbilityBase, float> OnAbilityCooldownStarted;
 
+    public float rangedDamageIncrease = 0f;
+    public int boostShotsRemaining = -1;
+
     public override void OnNetworkSpawn()
     {
         rb = GetComponent<Rigidbody2D>();

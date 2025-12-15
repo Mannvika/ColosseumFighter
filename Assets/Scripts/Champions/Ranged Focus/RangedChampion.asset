@@ -16,12 +16,9 @@ MonoBehaviour:
   maxHealth: 100
   moveSpeed: 4
   acceleration: 50
-  blockMoveMultiplier: 0.2
-  fireMoveMultiplier: 0.8
-  blockDamageMultiplier: 0.7
   dashAbility: {fileID: 11400000, guid: ba1990c4237cfd640a7fc246c325adfa, type: 2}
-  blockAbility: {fileID: 11400000, guid: c22d1061fffc08f40817ab0d89518094, type: 2}
+  blockAbility: {fileID: 11400000, guid: d5492f9eeb446f0498cdd647ff994d86, type: 2}
   meleeAttack: {fileID: 11400000, guid: a87c8ffd9fabb7446be318bcf6e8d962, type: 2}
-  primaryAbility: {fileID: 11400000, guid: cb931db0ca2b5634785d3989dd395284, type: 2}
-  signatureAbility: {fileID: 11400000, guid: 15fb978d204fbac4a831827165158afa, type: 2}
+  primaryAbility: {fileID: 11400000, guid: b794e57342776dc41a03f08d29981bb4, type: 2}
+  signatureAbility: {fileID: 11400000, guid: a4a816d318ee5af4ea761cf01eb75799, type: 2}
   projectileAbility: {fileID: 11400000, guid: a87c8ffd9fabb7446be318bcf6e8d962, type: 2}
