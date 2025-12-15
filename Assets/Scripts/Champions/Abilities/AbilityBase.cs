@@ -17,11 +17,10 @@ public abstract class AbilityBase : ScriptableObject
 
     public virtual void OnEnd(PlayerController parent, bool isServer)
     {
-        // Default implementation (can be overridden)
         if(parent.currentActiveAbility == this)
         {
             parent.currentActiveAbility = null;
-
+            parent.currentState = PlayerState.Normal;
         }
     }
 }

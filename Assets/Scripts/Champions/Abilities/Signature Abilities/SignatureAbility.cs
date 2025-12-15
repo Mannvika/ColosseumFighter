@@ -11,7 +11,7 @@ public abstract class SignatureAbility : AbilityBase
     public float chargePerDamageTaken;
     public override void Activate(PlayerController parent, bool isServer)
     {
-        if (parent.GetCurrentCharge() < maxCharge) return;
+        if (parent.Resources.SignatureCharge.Value < maxCharge) return;
         
         parent.StartCoroutine(SignatureRoutine(parent, isServer));
     }
@@ -27,7 +27,7 @@ public abstract class SignatureAbility : AbilityBase
     {
         if(isServer)
         {
-            parent.ResetCharge();
+            parent.Resources.ResetSignatureCharge();
         }
         parent.currentState = PlayerState.Normal;
         base.OnEnd(parent, isServer);

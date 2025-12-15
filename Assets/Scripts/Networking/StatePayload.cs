@@ -8,6 +8,7 @@ public class StatePayload : INetworkSerializable
     public Vector2 Position;
     public Vector2 Velocity;
     public PlayerState State;
+    public StatState Stats;
     
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
@@ -15,5 +16,6 @@ public class StatePayload : INetworkSerializable
         serializer.SerializeValue(ref Position);
         serializer.SerializeValue(ref Velocity);
         serializer.SerializeValue(ref State);
+        serializer.SerializeValue(ref Stats);
     }    
 }

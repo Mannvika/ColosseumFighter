@@ -15,25 +15,35 @@ public enum PlayerState
 }
 
 [RequireComponent(typeof(PlayerInputHandler))]
+[RequireComponent(typeof(PlayerMovement))]
+[RequireComponent(typeof(PlayerResources))]
 public class PlayerController : NetworkBehaviour
 {
-    [Header("Champion")]
+    [Header("Data")]
     public Champion championData;
-
-    public AbilityBase currentActiveAbility;
+    
+    [Header("Sub-Systems")]
+    public PlayerMovement Movement;
+    public PlayerResources Resources;
+    public StatSystem Stats = new StatSystem();
+    private PlayerInputHandler _inputHandler;
+    public PlayerAbilitySystem _abilitySystem;
 
     [Header("State")]
     public PlayerState currentState = PlayerState.Normal;
+    public AbilityBase currentActiveAbility; // Currently executing ability
+    public Vector2 CurrentInputMovement { get; private set; }
+
 
     [Header("Reconciliation")]
-    public float POSITION_TOLERANCE;
+    public float POSITION_TOLERANCE = 0.1f;
     public float FAST_MOVEMENT_MULTIPLIER = 3f;
 
-    // Buffers for input and state history
+    // Simulation Buffers
     private const int BUFFER_SIZE = 1024;
     private PlayerNetworkInputData[] _inputBuffer = new PlayerNetworkInputData[BUFFER_SIZE];
+    private SimulationState[] _stateBuffer = new SimulationState[BUFFER_SIZE];
 
-    // Struct to hold simulation state
     private struct SimulationState
     {
         public Vector2 Position;
@@ -42,74 +52,41 @@ public class PlayerController : NetworkBehaviour
         public StatState Stats;
     }
 
-    // State history buffer
-    private SimulationState[] _stateBuffer = new SimulationState[BUFFER_SIZE];
+    private bool initialized = false;
 
-    // Simulation tick tracking
-    private int _currentTick = 0;
+    // Tick Logic
+    public int CurrentTick { get; private set; } = 0;
     private float _timer;
     private const float TICK_RATE = 1f / 60f;
-    private int _stateStartTick;
-    private int _lastDashTick;
-
-    private Vector2 _dashDirection;
-    private PlayerInputHandler _inputHandler;
-    private Rigidbody2D rb;
-
-    [HideInInspector] 
-    public Vector2 CurrentMovementDirection;
-    public NetworkVariable<float> currentSignatureCharge = new NetworkVariable<float>(
-        0f,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server
-    );
-
-    public NetworkVariable<float> currentBlockCharge = new NetworkVariable<float>(
-        0f,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server
-    );
     
-    public NetworkVariable<bool> canBlock = new NetworkVariable<bool>(
-        true, 
-        NetworkVariableReadPermission.Everyone, 
-        NetworkVariableWritePermission.Server
-    );
+    private Rigidbody2D _rb;
 
-    private Dictionary<AbilityBase, int> cooldowns = new Dictionary<AbilityBase, int>();
-
-    public event Action<AbilityBase, float> OnAbilityCooldownStarted;
-
-    public StatSystem Stats = new StatSystem();
+    private void Awake()
+    {
+        //enabled = false;
+    }
 
     public override void OnNetworkSpawn()
     {
-        rb = GetComponent<Rigidbody2D>();
+        _rb = GetComponent<Rigidbody2D>();
         _inputHandler = GetComponent<PlayerInputHandler>();
+        Movement = GetComponent<PlayerMovement>();
+        Resources = GetComponent<PlayerResources>();
+        
+        Movement.Initialize(this, _rb);
+        Resources.Initialize(this);
+        _abilitySystem = new PlayerAbilitySystem(this);
 
-        currentBlockCharge.Value = championData.blockAbility.maxCharge;
-
-        // Set fixed delta time for consistent tick rate
         Time.fixedDeltaTime = TICK_RATE;
 
-        if(GameManager.instance != null)
-        {
-            GameState state = GameManager.instance.currentState.Value;
-            if(state == GameState.Countdown || state == GameState.Active)
-            {
-                TogglePlayerSpawnState(true);
+        //enabled = true;
 
-                if(state == GameState.Countdown)
-                {
-                    SetInputActive(false);
-                }
-            }
-        }
+        initialized = true;
     }
 
     void FixedUpdate()
     {
-        // Run simulation ticks based on fixed delta time
+        if(!initialized) return;
         _timer += Time.fixedDeltaTime;
         while (_timer >= TICK_RATE)
         {
@@ -118,206 +95,78 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (IsServer && championData != null && championData.signatureAbility != null)
-        {
-            // Update signature ability charge over time
-            float chargeAmount = championData.signatureAbility.chargePerSecond * Time.deltaTime;
-            currentSignatureCharge.Value = Mathf.Min(currentSignatureCharge.Value + chargeAmount, championData.signatureAbility.maxCharge);
-
-            float blockChargeAmount;
-            if(currentState != PlayerState.Blocking)
-            {
-                blockChargeAmount = championData.blockAbility.chargePerSecond * Time.deltaTime;
-                currentBlockCharge.Value = Mathf.Min(currentBlockCharge.Value + blockChargeAmount, championData.blockAbility.maxCharge);
-
-                if(!canBlock.Value && currentBlockCharge.Value >= championData.blockAbility.maxCharge)
-                {
-                    currentBlockCharge.Value = championData.blockAbility.maxCharge;
-                    canBlock.Value = true;
-                }
-            }
-            else
-            {
-                blockChargeAmount = championData.blockAbility.dischargePerSecond * Time.deltaTime;
-                currentBlockCharge.Value = Mathf.Max(0, currentBlockCharge.Value - blockChargeAmount);
-
-                if(currentBlockCharge.Value <= 0)
-                {
-                    currentBlockCharge.Value = 0f;
-                    canBlock.Value = false;
-                    championData.blockAbility.OnEnd(this, IsServer);
-                }
-            }
-        
-        }
-    }
-
     private void RunSimulationTick()
     {
         if (IsClient && IsOwner)
         {
-            // Gather input and process simulation
             PlayerNetworkInputData input = _inputHandler.CurrentInput;
-            input.Tick = _currentTick;
-
-            int bufferIndex = _currentTick % BUFFER_SIZE;
-            _inputBuffer[bufferIndex] = input;
+            input.Tick = CurrentTick;
 
             ProcessPlayerSimulation(input);
             ProcessInputServerRpc(input);
 
             _inputHandler.ResetInputs();
-
-            _currentTick++;
+            CurrentTick++;
         }
-        else if (IsServer && !IsOwner)
-        {
-            // wait 
-        }
+        // Server handles its own ticks via RPC processing usually, 
+        // but if Server is also a player (Host), separate logic is needed.
+        // For pure Server (Dedicated), it waits for RPC.
     }
 
+    // Core Logic Loop
     private void ProcessPlayerSimulation(PlayerNetworkInputData input)
     {
-        // Store input in buffer
+        if(!initialized) return;
+
         int bufferIndex = input.Tick % BUFFER_SIZE;
         _inputBuffer[bufferIndex] = input;
 
-        // Apply movement and state logic
-        RotatePlayerTowardsMouse(input.MousePosition);
-        ApplyStateLogic(input);
-        ApplyMovementPhysics(input);
+        CurrentInputMovement = input.Movement;
 
-        // Update simulation state buffer
+        // 1. Process Visuals (Rotation)
+        Movement.RotateTowards(input.MousePosition);
+
+        // 2. Process Logic (Abilities & State Transitions)
+        // Delegated to Ability System
+        _abilitySystem.ProcessInput(input);
+
+        // 3. Process Physics
+        // Calculate multipliers based on Active Ability
+        float moveMult = 1f;
+        bool stopMove = false;
+        
+        if (currentActiveAbility != null)
+        {
+            moveMult = currentActiveAbility.moveSpeedMultiplier;
+            stopMove = currentActiveAbility.stopMovementOnActivate;
+        }
+        
+        Movement.TickPhysics(input, moveMult, stopMove);
+
+        // 4. Update Tick Timer (Optional, if abilities use ticks internally)
+        Stats.Tick();
+
+        // 5. Save State for Rollback
         _stateBuffer[bufferIndex] = new SimulationState
         {
-            Position = rb.position,
-            Velocity = rb.linearVelocity,
+            Position = _rb.position,
+            Velocity = _rb.linearVelocity,
             State = currentState,
             Stats = Stats.GetState()
         };
     }
 
-    private void ApplyStateLogic(PlayerNetworkInputData input)
-    {
-        CurrentMovementDirection = input.Movement;
-
-        // Handle state-specific logic
-        if(currentState == PlayerState.Dashing)
-        {
-            _lastDashTick = _currentTick;
-            float durationInSecs = championData.dashAbility.dashDuration;
-            int durationInTicks = Mathf.CeilToInt(durationInSecs / TICK_RATE);
-            if (_currentTick >= _stateStartTick + durationInTicks)
-            {
-                championData.dashAbility.OnEnd(this, IsServer);
-            }
-            return;
-        }
-
-        if (currentState == PlayerState.Blocking)
-        {
-            if(input.IsDashPressed)
-            {
-                TryUseAbility(championData.dashAbility, PlayerState.Dashing);
-            }
-            if (!input.IsBlockPressed)
-            {
-                if (championData.blockAbility != null) championData.blockAbility.OnEnd(this, IsServer);
-                currentState = PlayerState.Normal;
-            }
-        }
-        else if (currentState == PlayerState.Firing)
-        {
-            if(input.IsDashPressed)
-            {
-                TryUseAbility(championData.dashAbility, PlayerState.Dashing);
-            }
-            if (!input.IsProjectilePressed)
-            {
-                if (championData.projectileAbility != null) championData.projectileAbility.OnEnd(this, IsServer);
-                currentState = PlayerState.Normal;
-            }
-            else
-            {
-                if (championData.projectileAbility != null) championData.projectileAbility.ProcessHold(this, IsServer);
-            }
-        }
-
-        if (currentState == PlayerState.Normal)
-        {
-            if (input.IsDashPressed)
-                TryUseAbility(championData.dashAbility, PlayerState.Dashing);
-
-            else if (input.IsBlockPressed)
-                TryUseAbility(championData.blockAbility, PlayerState.Blocking);
-
-            else if (input.IsMeleePressed)
-                TryUseAbility(championData.meleeAttack, PlayerState.Attacking);
-
-            else if (input.IsProjectilePressed)
-                TryUseAbility(championData.projectileAbility, PlayerState.Firing);
-
-            else if (input.IsPrimaryAbilityPressed)
-                TryUseAbility(championData.primaryAbility, PlayerState.UsingPrimaryAbility);
-
-            else if (input.IsSignatureAbilityPressed)
-                TryUseAbility(championData.signatureAbility, PlayerState.UsingSignatureAbility);
-        }
-    }
-    
-    private void ApplyMovementPhysics(PlayerNetworkInputData input)
-    {
-        // Determine target velocity based on state and input
-        Vector2 targetVelocity = Vector2.zero;
-        float currentAccel = championData.acceleration;
-        float speedMultiplier = 1f;
-
-        if(currentActiveAbility != null)
-        {
-            if(currentActiveAbility.stopMovementOnActivate)
-            {
-                rb.linearVelocity = Vector2.MoveTowards(rb.linearVelocity, Vector2.zero, 10000f * Time.deltaTime);      
-                return;      
-            }
-
-            speedMultiplier = currentActiveAbility.moveSpeedMultiplier;
-        }
-
-        if(currentState == PlayerState.Dashing)
-        {
-            float dashProgress = (float)(_currentTick - _stateStartTick) / (championData.dashAbility.dashDuration / TICK_RATE);
-            float currentDashSpeed =  Mathf.Lerp(championData.dashAbility.dashSpeed, 0f, dashProgress);
-            targetVelocity = _dashDirection * currentDashSpeed;
-            currentAccel = 100000f;
-        }
-        else if(targetVelocity == Vector2.zero)
-        {
-            currentAccel = 10000f;
-        }
-        else
-        {
-            targetVelocity = input.Movement * (championData.moveSpeed * speedMultiplier);
-        }
-
-        rb.linearVelocity = Vector2.MoveTowards(rb.linearVelocity, targetVelocity, currentAccel * Time.deltaTime);
-    }
-
-
     [ServerRpc]
     private void ProcessInputServerRpc(PlayerNetworkInputData input)
     {
-        // Update server-side simulation
-        _currentTick = input.Tick;
+        CurrentTick = input.Tick;
         ProcessPlayerSimulation(input);
 
-        // Reconcile with client
         StatePayload statePayload = new StatePayload
         {
             Tick = input.Tick,
-            Position = rb.position,
-            Velocity = rb.linearVelocity,
+            Position = _rb.position,
+            Velocity = _rb.linearVelocity,
             State = currentState
         };
 
@@ -329,203 +178,112 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        // Reconcile with server
-
-        // Get predicted state from buffer
         int bufferIndex = serverState.Tick % BUFFER_SIZE;
         SimulationState predictedState = _stateBuffer[bufferIndex];
 
-        // Check for position error
         float positionError = Vector2.Distance(serverState.Position, predictedState.Position);
-        float effectiveTolerance = POSITION_TOLERANCE;
+        
+        // Dynamic Tolerance based on State
+        float tolerance = POSITION_TOLERANCE;
+        if (currentState == PlayerState.Dashing || serverState.State == PlayerState.Dashing)
+            tolerance *= FAST_MOVEMENT_MULTIPLIER;
 
-        bool isDashing = currentState == PlayerState.Dashing || serverState.State == PlayerState.Dashing;
-        bool recentlyDashed = (_currentTick - _lastDashTick) <= Mathf.CeilToInt(championData.dashAbility.dashDuration / TICK_RATE) + 5; 
+        bool stateMismatch = predictedState.State != serverState.State;
 
-        if(isDashing || recentlyDashed)
+        if (positionError > tolerance || stateMismatch)
         {
-            effectiveTolerance *= FAST_MOVEMENT_MULTIPLIER;
-        }
+            // Debug.LogWarning($"Reconciling Tick {serverState.Tick}! Error: {positionError}");
 
-        if (positionError > effectiveTolerance)
-        {
-            Debug.LogWarning($"Reconciling! Error: {positionError}");
-
-            // Correct position and velocity
-            rb.position = serverState.Position;
-            rb.linearVelocity = serverState.Velocity;
+            // Snap to authoritative state
+            _rb.position = serverState.Position;
+            _rb.linearVelocity = serverState.Velocity;
             currentState = serverState.State;
+            Stats.SetState(serverState.Stats); // Usually you want server stats here? 
+                                                  // Ideally Stats should be in StatePayload too if they affect physics significantly.
 
-            Stats.SetState(predictedState.Stats);
-
-
-            // Reprocess inputs from the corrected tick
+            // Replay Inputs
             int tickToReprocess = serverState.Tick + 1;
-            while (tickToReprocess < _currentTick)
+            while (tickToReprocess < CurrentTick)
             {
                 int replayIndex = tickToReprocess % BUFFER_SIZE;
                 PlayerNetworkInputData replayInput = _inputBuffer[replayIndex];
 
-                ApplyStateLogic(replayInput);
-                ApplyMovementPhysics(replayInput);
-                Stats.Tick();
+                // A. Process Logic
+                _abilitySystem.ProcessInput(replayInput);
 
-                rb.position += rb.linearVelocity * TICK_RATE;
+                // B. Process Physics
+                float moveMult = currentActiveAbility != null ? currentActiveAbility.moveSpeedMultiplier : 1f;
+                bool stopMove = currentActiveAbility != null && currentActiveAbility.stopMovementOnActivate;
+                Movement.TickPhysics(replayInput, moveMult, stopMove);
 
+                // C. Process Stats (Tick down cooldowns/buffs)
+                Stats.Tick(); 
+
+                // D. Update Buffer with corrected future
                 _stateBuffer[replayIndex] = new SimulationState
                 {
-                    Position = rb.position,
-                    Velocity = rb.linearVelocity,
-                    State = currentState
+                    Position = transform.position,
+                    Velocity = _rb.linearVelocity,
+                    State = currentState,
+                    Stats = Stats.GetState() // Save the corrected stat state
                 };
 
                 tickToReprocess++;
             }
         }
     }
+
+    // --- Helper Methods for External Systems (Abilities) ---
+
+    // Called by Abilities to set cooldowns
+    public void SetAbilityCooldown(AbilityBase ability) => _abilitySystem.SetCooldown(ability);
+    public bool IsAbilityOnCooldown(AbilityBase ability) => _abilitySystem.IsOnCooldown(ability);
+
+    // Called by PlayerMovement
+    public void SetDashDirection(Vector2 dir) => Movement.StartDash(dir);
     
-    void RotatePlayerTowardsMouse(Vector2 mousePos)
+    // Called by Abilities
+    public void OnDamageDealt(float damage) => Resources.AddSignatureCharge(damage);
+
+    // Forces a state exit (e.g. Shield running out of energy)
+    public void ForceEndState(PlayerState stateToEnd)
     {
-        if(currentState == PlayerState.Dashing || currentState == PlayerState.Stunned) return;
-
-        if(Vector2.Distance(mousePos, rb.position) < 0.3f) return;
-
-        Vector2 lookDir = mousePos - rb.position;
-        float angle = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg - 90f;
-        rb.rotation = angle;
-    }
-
-    public void TryUseAbility(AbilityBase ability, PlayerState activeState)
-    {
-        if (ability == null) return;
-        
-        if (!CanTransitionTo(activeState)) return;
-        if (IsAbilityOnCooldown(ability)) return;
-
-        if (activeState != PlayerState.Firing && IsAbilityOnCooldown(ability)) return;
-
-        if (currentState == PlayerState.Blocking && activeState != PlayerState.Blocking && canBlock.Value)
+        if (currentState == stateToEnd)
         {
-            championData.blockAbility.OnEnd(this, IsServer);
-        }
-        else if(currentState == PlayerState.Firing && activeState != PlayerState.Firing)
-        {
-            championData.projectileAbility.OnEnd(this, IsServer);
-        }
-
-        _stateStartTick = _currentTick;
-
-        currentActiveAbility = ability;
-        ability.Activate(this, IsServer);
-        
-
-        if (activeState != PlayerState.Firing)
-        {
-            SetAbilityCooldown(ability);
+            if (stateToEnd == PlayerState.Blocking) championData.blockAbility.OnEnd(this, IsServer);
+            currentState = PlayerState.Normal;
         }
     }
-
-    public void SetDashDirection(Vector2 direction)
-    {
-        _dashDirection = direction;
-    }
-
-    public bool IsAbilityOnCooldown(AbilityBase ability)
-    {
-        if (cooldowns.ContainsKey(ability))
-        {
-            int thresholdTick = _currentTick;
-            if (IsServer) thresholdTick += 1;
-            return thresholdTick < cooldowns[ability];
-        }
-
-        return false;
-    }
-
-    public void SetAbilityCooldown(AbilityBase ability)
-    {
-        int cooldownTicks = Mathf.CeilToInt(ability.cooldown / TICK_RATE);
-        cooldowns[ability] = _currentTick + cooldownTicks;
-
-        if(IsOwner)
-        {
-            OnAbilityCooldownStarted(ability, ability.cooldown);
-        }
-    }
-    private bool CanTransitionTo(PlayerState newState)
-    {
-        if (newState == PlayerState.Normal) return true;
-
-        switch (currentState)
-        {
-            case PlayerState.Normal:
-                if (newState == PlayerState.Blocking && !canBlock.Value) return false;
-                return true;
-            case PlayerState.Blocking:
-                return (newState == PlayerState.Blocking && canBlock.Value) || newState == PlayerState.Dashing;
-            case PlayerState.Firing:
-                return newState == PlayerState.Dashing || newState == PlayerState.Firing;
-            case PlayerState.Dashing:
-            case PlayerState.UsingPrimaryAbility:
-            case PlayerState.UsingSignatureAbility:
-            case PlayerState.Stunned:
-                return false;
-        }
-
-        return false;
-    }
-
-    public void OnDamageDealt(float damage)
-    {
-        if(!IsServer) return;
-
-        currentSignatureCharge.Value = Mathf.Min(currentSignatureCharge.Value + damage * championData.signatureAbility.chargePerDamageDealt, championData.signatureAbility.maxCharge);
-    }
-
-    public float GetCurrentCharge()
-    {
-        return currentSignatureCharge.Value;
-    }
-
-    public float GetDamageMultiplier()
-    {
-        float multiplier = 1f;
-
-        if(currentState == PlayerState.Blocking)
-        {
-            multiplier *= championData.blockAbility.damageMultiplier;
-        }
-
-        return multiplier;
-    }
-
-    public void ResetCharge()
-    {
-        if(IsServer)
-        {
-            currentSignatureCharge.Value = 0f;
-        }
-    }
-
     public void SetInputActive(bool active)
     {
+        // Bridge to the Input Component
         if(_inputHandler != null)
         {
             _inputHandler.enabled = active;
-
             if(!active) _inputHandler.ResetInputs();
         }
     }
 
     public void TogglePlayerSpawnState(bool isSpawned)
     {
+        // toggle visuals
         var sr = GetComponentInChildren<SpriteRenderer>();
         if(sr != null) sr.enabled = isSpawned;
 
+        // toggle physics body
         var col = GetComponent<Collider2D>();
         if(col != null) col.enabled = isSpawned;
 
+        // toggle input
         SetInputActive(isSpawned);
+
+        // Optional: Reset internal state
+        if(isSpawned)
+        {
+            currentState = PlayerState.Normal;
+            Stats.Reset(); // If you want to reset buffs on respawn
+            // Health reset would go here too
+        }
     }
 }
 

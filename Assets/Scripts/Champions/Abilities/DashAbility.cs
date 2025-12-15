@@ -8,7 +8,7 @@ public class DashAbility : AbilityBase
 
     public override void Activate(PlayerController parent, bool isServer)
     {
-        Vector2 dashDir = parent.CurrentMovementDirection;
+        Vector2 dashDir = parent.CurrentInputMovement;
         if(dashDir == Vector2.zero)
         {
             dashDir = parent.transform.up;

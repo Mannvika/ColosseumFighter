@@ -25,12 +25,12 @@ public class Health : NetworkBehaviour, IDamageable
         if(!IsServer) return;
         PlayerController parent = GetComponent<PlayerController>();
 
-        currentHealth.Value -= amount * parent.GetDamageMultiplier();
+        currentHealth.Value -= amount * parent.Stats.GetStat(StatType.Defense, 1.0f);
 
         // Temp get related player controller object and increase charge
         if(parent != null && parent.championData.signatureAbility != null && parent.championData.signatureAbility != null)
         {
-            parent.currentSignatureCharge.Value = Mathf.Min(parent.currentSignatureCharge.Value + amount * parent.championData.signatureAbility.chargePerDamageTaken, parent.championData.signatureAbility.maxCharge);
+            parent.Resources.SignatureCharge.Value = Mathf.Min(parent.Resources.SignatureCharge.Value + amount * parent.championData.signatureAbility.chargePerDamageTaken, parent.championData.signatureAbility.maxCharge);
         }
 
         if (currentHealth.Value <= 0)

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
+using System;
 
 public enum StatType
 {
@@ -10,22 +12,56 @@ public enum StatType
 }
 
 [System.Serializable]
-public struct StatModifier
+public struct StatModifier: INetworkSerializable, IEquatable<StatModifier>
 {
     public StatType Type;
     public float Value;
     public int TicksRemaining; // -1 for permanent
     public int Charges;
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref Type);
+        serializer.SerializeValue(ref Value);
+        serializer.SerializeValue(ref TicksRemaining);
+        serializer.SerializeValue(ref Charges);
+    }
+
+    public bool Equals(StatModifier other)
+    {
+        return Type == other.Type && 
+               Mathf.Approximately(Value, other.Value) && 
+               TicksRemaining == other.TicksRemaining && 
+               Charges == other.Charges;
+    }
 }
 
 [System.Serializable]
-public struct StatState
+public struct StatState: INetworkSerializable, IEquatable<StatState>
 {
     public StatModifier Mod0;
     public StatModifier Mod1;
     public StatModifier Mod2;
     public StatModifier Mod3;
     public int ActiveCount;
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref Mod0);
+        serializer.SerializeValue(ref Mod1);
+        serializer.SerializeValue(ref Mod2);
+        serializer.SerializeValue(ref Mod3);
+        serializer.SerializeValue(ref ActiveCount);
+    }
+
+    public bool Equals(StatState other)
+    {
+        return Mod0.Equals(other.Mod0) && 
+               Mod1.Equals(other.Mod1) && 
+               Mod2.Equals(other.Mod2) && 
+               Mod3.Equals(other.Mod3) && 
+               ActiveCount == other.ActiveCount;
+    }
 }
 
 public class StatSystem

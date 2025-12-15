@@ -12,6 +12,6 @@ public class RangedStatBoost : AbilityBase
     }
     public override void OnEnd(PlayerController parent, bool isServer)
     {
-        
+        base.OnEnd(parent, isServer);
     }
 }

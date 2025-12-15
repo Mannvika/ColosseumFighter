@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 982218446923169347}
   - component: {fileID: 1176623144428540}
   - component: {fileID: 809145659546078322}
+  - component: {fileID: 1505180182191996178}
+  - component: {fileID: 6659808602921238528}
   - component: {fileID: -39208097517059577}
   - component: {fileID: 4039933249097515112}
   - component: {fileID: 8119172291975326487}
@@ -164,16 +166,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   ShowTopMostFoldoutHeaderGroup: 1
   championData: {fileID: 11400000, guid: a08cc4a43a5285548a084e023894b58f, type: 2}
-  currentActiveAbility: {fileID: 0}
+  Movement: {fileID: 1505180182191996178}
+  Resources: {fileID: 6659808602921238528}
   currentState: 0
+  currentActiveAbility: {fileID: 0}
   POSITION_TOLERANCE: 1
   FAST_MOVEMENT_MULTIPLIER: 4
-  CurrentMovementDirection: {x: 0, y: 0}
-  currentSignatureCharge:
+--- !u!114 &1505180182191996178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4642004096300384400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1f97d31107c64741b653284b53bd22d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
+--- !u!114 &6659808602921238528
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4642004096300384400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 333050335b4c4134988f78a658a639d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerResources
+  ShowTopMostFoldoutHeaderGroup: 1
+  SignatureCharge:
     m_InternalValue: 0
-  currentBlockCharge:
+  BlockCharge:
     m_InternalValue: 0
-  canBlock:
+  CanBlock:
     m_InternalValue: 1
 --- !u!114 &-39208097517059577
 MonoBehaviour:
