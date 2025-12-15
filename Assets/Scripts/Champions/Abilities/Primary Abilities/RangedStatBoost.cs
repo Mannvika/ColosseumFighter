@@ -8,7 +8,8 @@ public class RangedStatBoost : AbilityBase
     public int numberOfShots;
     public override void Activate(PlayerController parent, bool isServer)
     {
-        parent.Stats.AddModifier(StatType.RangedDamage, damageMultiplier, -1, numberOfShots);    
+        parent._abilitySystem.RegisterStatWait(this, StatType.RangedDamage);
+        parent.Stats.AddModifier(StatType.RangedDamage, damageMultiplier, numberOfShots, -1);    
     }
     public override void OnEnd(PlayerController parent, bool isServer)
     {

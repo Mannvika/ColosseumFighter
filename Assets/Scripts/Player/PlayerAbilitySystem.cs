@@ -6,12 +6,34 @@ public class PlayerAbilitySystem
 {
     private PlayerController _controller;
     private Dictionary<AbilityBase, int> _cooldowns = new Dictionary<AbilityBase, int>();
+    private Dictionary<StatType, AbilityBase> _statCooldownMap = new Dictionary<StatType, AbilityBase>();
     
     public event Action<AbilityBase, float> OnCooldownStarted;
 
     public PlayerAbilitySystem(PlayerController controller)
     {
         _controller = controller;
+        _controller.Stats.OnStatDepleted += HandleStatDepletion;
+    }
+
+    public void RegisterStatWait(AbilityBase ability, StatType type)
+    {
+        _statCooldownMap[type] = ability;
+    }
+
+    private void HandleStatDepletion(StatType type)
+    {
+        if (_statCooldownMap.TryGetValue(type, out AbilityBase ability))
+        {
+            SetCooldown(ability);
+            _statCooldownMap.Remove(type);
+        }
+    }
+
+    public void OnDestroy()
+    {
+        if(_controller != null && _controller.Stats != null)
+             _controller.Stats.OnStatDepleted -= HandleStatDepletion;
     }
 
     public void ProcessInput(PlayerNetworkInputData input)
@@ -73,7 +95,7 @@ public class PlayerAbilitySystem
         _controller.currentActiveAbility = ability;
         ability.Activate(_controller, _controller.IsServer); 
 
-        if (targetState != PlayerState.Firing)
+        if (targetState != PlayerState.Firing && !ability.startCooldownOnEnd)
         {
             SetCooldown(ability);
         }
@@ -81,7 +103,15 @@ public class PlayerAbilitySystem
 
     public void EndAbility(AbilityBase ability)
     {
-        if (ability != null) ability.OnEnd(_controller, _controller.IsServer);
+        if (ability != null)
+        {
+            if(ability.startCooldownOnEnd)
+            {
+                SetCooldown(ability);
+            }
+            ability.OnEnd(_controller, _controller.IsServer);
+
+        } 
     }
 
     public bool IsOnCooldown(AbilityBase ability)

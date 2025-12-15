@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: RangedChampion
   m_EditorClassIdentifier: Assembly-CSharp::Champion
   championName: Prototype
-  maxHealth: 100
-  moveSpeed: 4
+  maxHealth: 500
+  moveSpeed: 5
   acceleration: 50
   dashAbility: {fileID: 11400000, guid: ba1990c4237cfd640a7fc246c325adfa, type: 2}
   blockAbility: {fileID: 11400000, guid: d5492f9eeb446f0498cdd647ff994d86, type: 2}

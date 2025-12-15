@@ -69,6 +69,8 @@ public class StatSystem
     private List<StatModifier> _modifiers = new List<StatModifier>();
     private const int MAX_MODIFIERS = 4;
 
+    public event Action<StatType> OnStatDepleted;
+
     public void AddModifier(StatType type, float value, int charges, int durationTicks)
     {
         if (_modifiers.Count >= MAX_MODIFIERS)
@@ -100,6 +102,8 @@ public class StatSystem
                 if (mod.Charges <= 0)
                 {
                     _modifiers.RemoveAt(i);
+
+                    OnStatDepleted?.Invoke(type);
                 }
             }
         }
@@ -132,6 +136,7 @@ public class StatSystem
                 if (mod.TicksRemaining <= 0)
                 {
                     _modifiers.RemoveAt(i);
+                    OnStatDepleted?.Invoke(mod.Type);
                 }
             }
         }

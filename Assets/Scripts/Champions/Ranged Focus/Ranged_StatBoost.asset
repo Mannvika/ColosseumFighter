@@ -13,5 +13,9 @@ MonoBehaviour:
   m_Name: Ranged_StatBoost
   m_EditorClassIdentifier: Assembly-CSharp::RangedStatBoost
   cooldown: 5
-  damageIncrease: 10
+  stopMovementOnActivate: 0
+  allowRotation: 1
+  moveSpeedMultiplier: 1
+  startCooldownOnEnd: 1
+  damageMultiplier: 1.3
   numberOfShots: 3

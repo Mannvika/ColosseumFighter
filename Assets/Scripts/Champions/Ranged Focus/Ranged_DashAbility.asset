@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe0741ca7223c7042ac5c3bdda0383f3, type: 3}
   m_Name: Ranged_DashAbility
   m_EditorClassIdentifier: Assembly-CSharp::DashAbility
-  cooldown: 0.9
+  cooldown: 0.75
+  stopMovementOnActivate: 0
+  allowRotation: 1
+  moveSpeedMultiplier: 1
+  startCooldownOnEnd: 1
   dashSpeed: 65
   dashDuration: 0.25
