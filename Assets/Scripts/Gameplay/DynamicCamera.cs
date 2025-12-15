@@ -28,7 +28,7 @@ public class DynamicCamera : MonoBehaviour
     void LateUpdate()
     {
         // 1. Logic to find players if we don't have them yet (Netcode spawning)
-        if (targets.Count == 0)
+        if (targets.Count <= 1)
         {
             FindPlayers();
             return;

@@ -222,6 +222,7 @@ public class PlayerController : NetworkBehaviour
     {
         // Determine target velocity based on state and input
         Vector2 targetVelocity = Vector2.zero;
+        float currentAccel = championData.acceleration;
 
         switch (currentState)
         {
@@ -254,6 +255,7 @@ public class PlayerController : NetworkBehaviour
                 float dashProgress = (float)(_currentTick - _stateStartTick) / (championData.dashAbility.dashDuration / TICK_RATE);
                 float currentDashSpeed =  Mathf.Lerp(championData.dashAbility.dashSpeed, 0f, dashProgress);
                 targetVelocity = _dashDirection * currentDashSpeed;
+                currentAccel = 100000f;
                 break; 
 
             case PlayerState.UsingPrimaryAbility:
@@ -262,8 +264,6 @@ public class PlayerController : NetworkBehaviour
                 targetVelocity = Vector2.zero;
                 break;
         }
-
-        float currentAccel = championData.acceleration;
 
         if(targetVelocity == Vector2.zero)
         {

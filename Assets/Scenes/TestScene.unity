@@ -614,12 +614,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: efc90d27a80d228488f03395fea0a20b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicCamera
-  playerTag: 
+  targets: []
   offset: {x: 0, y: 0, z: -10}
-  smoothTime: 10
-  minZoom: 4
-  maxZoom: 8.5
-  zoomLimiter: 50
+  smoothTime: 0.05
+  minZoom: 2
+  maxZoom: 10
+  zoomLimiter: 5
 --- !u!1 &557871309
 GameObject:
   m_ObjectHideFlags: 0
