@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using System;
 public enum PlayerState
 {
     Normal,
@@ -73,6 +74,8 @@ public class PlayerController : NetworkBehaviour
     );
 
     private Dictionary<AbilityBase, int> cooldowns = new Dictionary<AbilityBase, int>();
+
+    public event Action<AbilityBase, float> OnAbilityCooldownStarted;
 
     public override void OnNetworkSpawn()
     {
@@ -438,6 +441,11 @@ public class PlayerController : NetworkBehaviour
     {
         int cooldownTicks = Mathf.CeilToInt(ability.cooldown / TICK_RATE);
         cooldowns[ability] = _currentTick + cooldownTicks;
+
+        if(IsOwner)
+        {
+            OnAbilityCooldownStarted(ability, ability.cooldown);
+        }
     }
     private bool CanTransitionTo(PlayerState newState)
     {
