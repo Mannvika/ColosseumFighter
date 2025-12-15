@@ -19,8 +19,9 @@ public class DashAbility : AbilityBase
         parent.currentState = PlayerState.Dashing;
     }
 
-    public override void EndAbility(PlayerController parent, bool isServer)
+    public override void OnEnd(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
+        base.OnEnd(parent, isServer);
     }
 }

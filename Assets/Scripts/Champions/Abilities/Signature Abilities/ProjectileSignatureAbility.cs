@@ -22,7 +22,7 @@ public class ProjectileSignatureAbility : SignatureAbility
             }
             yield return new WaitForSeconds(timeBetweenProjectiles);
         }
-        EndAbility(parent, isServer);
+        OnEnd(parent, isServer);
     }
 
     private void SpawnProjectile(PlayerController parent)

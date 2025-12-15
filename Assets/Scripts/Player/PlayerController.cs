@@ -20,6 +20,8 @@ public class PlayerController : NetworkBehaviour
     [Header("Champion")]
     public Champion championData;
 
+    public AbilityBase currentActiveAbility;
+
     [Header("State")]
     public PlayerState currentState = PlayerState.Normal;
 
@@ -37,6 +39,7 @@ public class PlayerController : NetworkBehaviour
         public Vector2 Position;
         public Vector2 Velocity;
         public PlayerState State;
+        public StatState Stats;
     }
 
     // State history buffer
@@ -77,8 +80,7 @@ public class PlayerController : NetworkBehaviour
 
     public event Action<AbilityBase, float> OnAbilityCooldownStarted;
 
-    public float rangedDamageIncrease = 0f;
-    public int boostShotsRemaining = -1;
+    public StatSystem Stats = new StatSystem();
 
     public override void OnNetworkSpawn()
     {
@@ -145,7 +147,7 @@ public class PlayerController : NetworkBehaviour
                 {
                     currentBlockCharge.Value = 0f;
                     canBlock.Value = false;
-                    championData.blockAbility.EndAbility(this, IsServer);
+                    championData.blockAbility.OnEnd(this, IsServer);
                 }
             }
         
@@ -192,7 +194,8 @@ public class PlayerController : NetworkBehaviour
         {
             Position = rb.position,
             Velocity = rb.linearVelocity,
-            State = currentState
+            State = currentState,
+            Stats = Stats.GetState()
         };
     }
 
@@ -208,7 +211,7 @@ public class PlayerController : NetworkBehaviour
             int durationInTicks = Mathf.CeilToInt(durationInSecs / TICK_RATE);
             if (_currentTick >= _stateStartTick + durationInTicks)
             {
-                championData.dashAbility.EndAbility(this, IsServer);
+                championData.dashAbility.OnEnd(this, IsServer);
             }
             return;
         }
@@ -221,7 +224,7 @@ public class PlayerController : NetworkBehaviour
             }
             if (!input.IsBlockPressed)
             {
-                if (championData.blockAbility != null) championData.blockAbility.EndAbility(this, IsServer);
+                if (championData.blockAbility != null) championData.blockAbility.OnEnd(this, IsServer);
                 currentState = PlayerState.Normal;
             }
         }
@@ -233,7 +236,7 @@ public class PlayerController : NetworkBehaviour
             }
             if (!input.IsProjectilePressed)
             {
-                if (championData.projectileAbility != null) championData.projectileAbility.EndAbility(this, IsServer);
+                if (championData.projectileAbility != null) championData.projectileAbility.OnEnd(this, IsServer);
                 currentState = PlayerState.Normal;
             }
             else
@@ -269,39 +272,33 @@ public class PlayerController : NetworkBehaviour
         // Determine target velocity based on state and input
         Vector2 targetVelocity = Vector2.zero;
         float currentAccel = championData.acceleration;
+        float speedMultiplier = 1f;
 
-        switch (currentState)
+        if(currentActiveAbility != null)
         {
-            case PlayerState.Normal:
-            case PlayerState.Attacking: 
-                targetVelocity = input.Movement * championData.moveSpeed;
-                break;
+            if(currentActiveAbility.stopMovementOnActivate)
+            {
+                rb.linearVelocity = Vector2.MoveTowards(rb.linearVelocity, Vector2.zero, 10000f * Time.deltaTime);      
+                return;      
+            }
 
-            case PlayerState.Blocking:
-                targetVelocity = input.Movement * (championData.moveSpeed * championData.blockAbility.moveMultiplier);
-                break;
-
-            case PlayerState.Firing:
-                targetVelocity = input.Movement * (championData.moveSpeed * championData.projectileAbility.moveMultiplier);
-                break;
-
-            case PlayerState.Dashing:
-                float dashProgress = (float)(_currentTick - _stateStartTick) / (championData.dashAbility.dashDuration / TICK_RATE);
-                float currentDashSpeed =  Mathf.Lerp(championData.dashAbility.dashSpeed, 0f, dashProgress);
-                targetVelocity = _dashDirection * currentDashSpeed;
-                currentAccel = 100000f;
-                break; 
-
-            case PlayerState.UsingPrimaryAbility:
-            case PlayerState.UsingSignatureAbility:
-            case PlayerState.Stunned:
-                targetVelocity = Vector2.zero;
-                break;
+            speedMultiplier = currentActiveAbility.moveSpeedMultiplier;
         }
 
-        if(targetVelocity == Vector2.zero)
+        if(currentState == PlayerState.Dashing)
+        {
+            float dashProgress = (float)(_currentTick - _stateStartTick) / (championData.dashAbility.dashDuration / TICK_RATE);
+            float currentDashSpeed =  Mathf.Lerp(championData.dashAbility.dashSpeed, 0f, dashProgress);
+            targetVelocity = _dashDirection * currentDashSpeed;
+            currentAccel = 100000f;
+        }
+        else if(targetVelocity == Vector2.zero)
         {
             currentAccel = 10000f;
+        }
+        else
+        {
+            targetVelocity = input.Movement * (championData.moveSpeed * speedMultiplier);
         }
 
         rb.linearVelocity = Vector2.MoveTowards(rb.linearVelocity, targetVelocity, currentAccel * Time.deltaTime);
@@ -359,6 +356,9 @@ public class PlayerController : NetworkBehaviour
             rb.linearVelocity = serverState.Velocity;
             currentState = serverState.State;
 
+            Stats.SetState(predictedState.Stats);
+
+
             // Reprocess inputs from the corrected tick
             int tickToReprocess = serverState.Tick + 1;
             while (tickToReprocess < _currentTick)
@@ -368,6 +368,7 @@ public class PlayerController : NetworkBehaviour
 
                 ApplyStateLogic(replayInput);
                 ApplyMovementPhysics(replayInput);
+                Stats.Tick();
 
                 rb.position += rb.linearVelocity * TICK_RATE;
 
@@ -405,15 +406,16 @@ public class PlayerController : NetworkBehaviour
 
         if (currentState == PlayerState.Blocking && activeState != PlayerState.Blocking && canBlock.Value)
         {
-            championData.blockAbility.EndAbility(this, IsServer);
+            championData.blockAbility.OnEnd(this, IsServer);
         }
         else if(currentState == PlayerState.Firing && activeState != PlayerState.Firing)
         {
-            championData.projectileAbility.EndAbility(this, IsServer);
+            championData.projectileAbility.OnEnd(this, IsServer);
         }
 
         _stateStartTick = _currentTick;
 
+        currentActiveAbility = ability;
         ability.Activate(this, IsServer);
         
 

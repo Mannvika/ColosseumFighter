@@ -22,7 +22,7 @@ public class MeleeAttack : AbilityBase
             PerformServerHitCheck(parent, origin);
         }
 
-        EndAbility(parent, isServer);
+        OnEnd(parent, isServer);
     }
 
     private void PerformServerHitCheck(PlayerController parent, Vector2 origin)
@@ -47,10 +47,10 @@ public class MeleeAttack : AbilityBase
         return (Vector2)parent.transform.position + ((Vector2)parent.transform.up * offsetDistance);
     }
 
-    public override void EndAbility(PlayerController parent, bool isServer)
+    public override void OnEnd(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
-        // Debug.Log("Melee attack ended.");
+        base.OnEnd(parent, isServer);
     }
 }
 

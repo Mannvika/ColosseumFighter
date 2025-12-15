@@ -15,9 +15,10 @@ public class BlockAbility : AbilityBase
         // Debug.Log("Block ability activated.");
     }
 
-    public override void EndAbility(PlayerController parent, bool isServer)
+    public override void OnEnd(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
         // Debug.Log("Block ability ended.");
+        base.OnEnd(parent, isServer);
     }
 }

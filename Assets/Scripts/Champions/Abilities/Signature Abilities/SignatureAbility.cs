@@ -19,17 +19,18 @@ public abstract class SignatureAbility : AbilityBase
     public virtual IEnumerator SignatureRoutine(PlayerController parent, bool isServer)
     {
         yield return new WaitForFixedUpdate();
-        EndAbility(parent, isServer);
+        OnEnd(parent, isServer);
     }
 
 
-    public override void EndAbility(PlayerController parent, bool isServer)
+    public override void OnEnd(PlayerController parent, bool isServer)
     {
         if(isServer)
         {
             parent.ResetCharge();
         }
         parent.currentState = PlayerState.Normal;
+        base.OnEnd(parent, isServer);
         //Debug.Log("Signature ability ended.");
     }
 }

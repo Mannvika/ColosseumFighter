@@ -137,7 +137,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1147840705
+  GlobalObjectIdHash: 988418772
   InScenePlacedSourceGlobalObjectIdHash: 1147840705
   DeferredDespawnTick: 0
   Ownership: 1
@@ -164,6 +164,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   ShowTopMostFoldoutHeaderGroup: 1
   championData: {fileID: 11400000, guid: a08cc4a43a5285548a084e023894b58f, type: 2}
+  currentActiveAbility: {fileID: 0}
   currentState: 0
   POSITION_TOLERANCE: 1
   FAST_MOVEMENT_MULTIPLIER: 4
@@ -174,8 +175,6 @@ MonoBehaviour:
     m_InternalValue: 0
   canBlock:
     m_InternalValue: 1
-  rangedDamageIncrease: 0
-  boostShotsRemaining: -1
 --- !u!114 &-39208097517059577
 MonoBehaviour:
   m_ObjectHideFlags: 0

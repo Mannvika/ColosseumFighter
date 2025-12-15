@@ -19,7 +19,7 @@ public class ProjectileAbility : AbilityBase
         { 
             // Debug.Log("Shot Projectile"); 
         }
-        EndAbility(parent, isServer);
+        OnEnd(parent, isServer);
     }
 
     private void SpawnProjectile(PlayerController parent)
@@ -30,9 +30,10 @@ public class ProjectileAbility : AbilityBase
         projectile.GetComponent<NetworkProjectile>().damage = damage;
         projectile.GetComponent<NetworkObject>().Spawn();
     }
-    public override void EndAbility(PlayerController parent, bool isServer)
+    public override void OnEnd(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
         // Debug.Log("Projectile ability ended.");
+        base.OnEnd(parent, isServer);
     }
 }

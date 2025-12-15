@@ -4,14 +4,13 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "RangedAttack", menuName = "Scriptable Objects/Abilities/RangedStatBoost")]
 public class RangedStatBoost : AbilityBase
 {
-    public float damageIncrease;
+    public float damageMultiplier;
     public int numberOfShots;
     public override void Activate(PlayerController parent, bool isServer)
     {
-        parent.rangedDamageIncrease = damageIncrease;
-        parent.boostShotsRemaining = numberOfShots;
+        parent.Stats.AddModifier(StatType.RangedDamage, damageMultiplier, -1, numberOfShots);    
     }
-    public override void EndAbility(PlayerController parent, bool isServer)
+    public override void OnEnd(PlayerController parent, bool isServer)
     {
         
     }
