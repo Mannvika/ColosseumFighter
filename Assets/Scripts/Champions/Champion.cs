@@ -9,7 +9,6 @@ public class Champion : ScriptableObject
     public float acceleration = 50f;
     public float blockMoveMultiplier;
     public float fireMoveMultiplier;
-    public float attackDamage;
     public float blockDamageMultiplier;
 
     [Header("Abilities")]
