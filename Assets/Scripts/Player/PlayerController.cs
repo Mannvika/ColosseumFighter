@@ -9,8 +9,6 @@ public enum PlayerState
     Dashing,
     Blocking,
     Firing,
-    UsingPrimaryAbility,
-    UsingSignatureAbility,
     Stunned
 }
 

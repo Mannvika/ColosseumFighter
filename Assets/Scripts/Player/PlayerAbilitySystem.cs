@@ -70,8 +70,8 @@ public class PlayerAbilitySystem
             else if (input.IsBlockPressed) TryActivateAbility(champion.blockAbility, PlayerState.Blocking);
             else if (input.IsMeleePressed) TryActivateAbility(champion.meleeAttack, PlayerState.Attacking);
             else if (input.IsProjectilePressed && state != PlayerState.Firing) TryActivateAbility(champion.projectileAbility, PlayerState.Firing);
-            else if (input.IsPrimaryAbilityPressed) TryActivateAbility(champion.primaryAbility, PlayerState.UsingPrimaryAbility);
-            else if (input.IsSignatureAbilityPressed) TryActivateAbility(champion.signatureAbility, PlayerState.UsingSignatureAbility);
+            else if (input.IsPrimaryAbilityPressed) TryActivateAbility(champion.primaryAbility, PlayerState.Normal);
+            else if (input.IsSignatureAbilityPressed) TryActivateAbility(champion.signatureAbility, PlayerState.Normal);
         }
     }
 
@@ -146,8 +146,6 @@ public class PlayerAbilitySystem
             case PlayerState.Firing:
                 return newState == PlayerState.Dashing || newState == PlayerState.Firing;
             case PlayerState.Dashing:
-            case PlayerState.UsingPrimaryAbility:
-            case PlayerState.UsingSignatureAbility:
             case PlayerState.Stunned:
                 return false;
         }

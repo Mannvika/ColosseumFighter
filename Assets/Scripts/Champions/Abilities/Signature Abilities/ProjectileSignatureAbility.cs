@@ -13,7 +13,7 @@ public class ProjectileSignatureAbility : SignatureAbility
 
     public override IEnumerator SignatureRoutine(PlayerController parent, bool isServer)
     {
-        parent.currentState = PlayerState.UsingSignatureAbility;
+        parent.currentState = PlayerState.Normal;
         for(int i = 0; i < numberOfProjectiles; i++)
         {
             if (isServer)

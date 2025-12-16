@@ -9,7 +9,7 @@ public class ProjectileAbility : AbilityBase
     public float damage;
     public override void Activate(PlayerController parent, bool isServer)
     {
-        parent.currentState = PlayerState.UsingPrimaryAbility;
+        parent.currentState = PlayerState.Normal;
         if(isServer)
         {
             // Debug.Log("[Ability] SERVER Attempting to Spawn"); 
