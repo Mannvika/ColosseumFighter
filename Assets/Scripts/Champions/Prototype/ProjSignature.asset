@@ -9,14 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 350990df25ce2d64e954b1c8eb6623d9, type: 3}
-  m_Name: Proto_ProjectileAbility
-  m_EditorClassIdentifier: Assembly-CSharp::ProjectileAbility
-  cooldown: 2
+  m_Script: {fileID: 11500000, guid: e9a7a0b241c2030448e282cae3cabd66, type: 3}
+  m_Name: ProjSignature
+  m_EditorClassIdentifier: Assembly-CSharp::SignatureAbility
+  cooldown: 0
   stopMovementOnActivate: 1
   allowRotation: 1
   moveSpeedMultiplier: 1
   startCooldownOnEnd: 0
-  projectilePrefab: {fileID: 6782317319294876377, guid: 834c53621096f344fab6c9423d11752f, type: 3}
-  projectileSpeed: 80
-  damage: 15
+  maxCharge: 100
+  chargePerSecond: 20
+  chargePerDamageDealt: 1
+  chargePerDamageTaken: 1
+  abilityToCast: {fileID: 11400000, guid: fe3fbbd5d66770a4a8cffc604c13a809, type: 2}

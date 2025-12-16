@@ -19,7 +19,7 @@ MonoBehaviour:
   startCooldownOnEnd: 1
   zonePrefab: {fileID: 1321658038337639861, guid: f5e1d2868dc93fc458024f66d0f11842, type: 3}
   damagePerTick: 4
-  duration: 500
+  duration: 2
   tickRate: 0.5
   spawnAtMouse: 0
   maxRange: 10

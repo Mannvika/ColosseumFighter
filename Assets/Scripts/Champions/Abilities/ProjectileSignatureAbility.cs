@@ -11,7 +11,7 @@ public class ProjectileSignatureAbility : SignatureAbility
     public int numberOfProjectiles;
     public float timeBetweenProjectiles;
 
-    public override IEnumerator SignatureRoutine(PlayerController parent, bool isServer)
+    public IEnumerator SignatureRoutine(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
         for(int i = 0; i < numberOfProjectiles; i++)
