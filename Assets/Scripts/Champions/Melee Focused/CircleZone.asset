@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5769ea5a243cdc8429e6983ae02a9ea2, type: 3}
   m_Name: CircleZone
   m_EditorClassIdentifier: Assembly-CSharp::SpawnZoneAbility
-  cooldown: 5
+  cooldown: 18
   stopMovementOnActivate: 0
   allowRotation: 1
   moveSpeedMultiplier: 1

@@ -127,7 +127,15 @@ public class PlayerAbilitySystem
     public void SetCooldown(AbilityBase ability)
     {
         int durationTicks = Mathf.CeilToInt(ability.cooldown / Time.fixedDeltaTime);
-        _cooldowns[ability] = _controller.CurrentTick + durationTicks;
+        int endTick = _controller.CurrentTick + durationTicks;
+
+        bool isHostPrediction = _controller.IsServer && _controller.IsOwner && _controller.isPredicting;
+
+        if (!isHostPrediction)
+        {
+            _cooldowns[ability] = endTick;
+        }
+
         if (_controller.IsOwner) OnCooldownStarted?.Invoke(ability, ability.cooldown);
     }
 
