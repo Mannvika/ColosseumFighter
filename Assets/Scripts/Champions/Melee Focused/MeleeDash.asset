@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe0741ca7223c7042ac5c3bdda0383f3, type: 3}
+  m_Name: MeleeDash
+  m_EditorClassIdentifier: Assembly-CSharp::DashAbility
+  cooldown: 0.5
+  stopMovementOnActivate: 0
+  allowRotation: 1
+  moveSpeedMultiplier: 1
+  startCooldownOnEnd: 1
+  dashSpeed: 40
+  dashDuration: 0.25

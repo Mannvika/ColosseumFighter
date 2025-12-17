@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70298d80c1ca68b4e89d3fbac4ed609a, type: 3}
+  m_Name: MeleeChampion
+  m_EditorClassIdentifier: Assembly-CSharp::Champion
+  championName: Melee
+  maxHealth: 500
+  moveSpeed: 5
+  acceleration: 50
+  dashAbility: {fileID: 11400000, guid: bc8e0a374efad9b48a0fcdc67f52c08c, type: 2}
+  blockAbility: {fileID: 11400000, guid: 24cbf02ef06a42a41b6048803945d97d, type: 2}
+  meleeAttack: {fileID: 11400000, guid: 880d14961a9cc6e4fa7ebac15700c4fe, type: 2}
+  primaryAbility: {fileID: 11400000, guid: d9bebf860f03167488b0c79c1029e865, type: 2}
+  signatureAbility: {fileID: 11400000, guid: ae3c306801f9cb64da5cf43b0808d279, type: 2}
+  projectileAbility: {fileID: 11400000, guid: a87c8ffd9fabb7446be318bcf6e8d962, type: 2}

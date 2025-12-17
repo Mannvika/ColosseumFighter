@@ -68,8 +68,6 @@ public class AbilityHUD : MonoBehaviour
 
         foreach (var slot in abilitySlots)
         {
-            Debug.Log(slot.abilityRef.name + " - " + cleanName);
-            Debug.Log(slot.abilityRef.name == cleanName);
             if (slot.abilityRef == ability)
             {
                 StartCoroutine(AnimateScale(slot.barRect, duration));

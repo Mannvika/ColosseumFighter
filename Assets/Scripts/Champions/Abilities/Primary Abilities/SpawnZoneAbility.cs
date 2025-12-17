@@ -59,7 +59,7 @@ public class SpawnZoneAbility : AbilityBase
         zoneObj.GetComponent<NetworkObject>().Spawn();
     }
 
-        public override void OnEnd(PlayerController parent, bool isServer)
+    public override void OnEnd(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
         base.OnEnd(parent, isServer);

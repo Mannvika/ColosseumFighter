@@ -10,12 +10,11 @@ public class MeleeAttack : AbilityBase
     public LayerMask hitLayers;
     public override void Activate(PlayerController parent, bool isServer)
     {
-        // Debug.Log("Attacked");
+        Debug.Log("Attacked");
 
         Vector2 origin = GetOrigin(parent);
         DebugExtensions.DrawBox(origin, hitboxSize, parent.transform.eulerAngles.z, Color.red, 0.2f);
         parent.currentState = PlayerState.Attacking;
-
 
         if(isServer)
         {
@@ -35,6 +34,7 @@ public class MeleeAttack : AbilityBase
 
             if(hit.TryGetComponent<IDamageable>(out IDamageable target))
             {
+                float finalDamage = parent.Stats.GetStat(StatType.Damage, damage);
                 target.TakeDamage(damage); 
                 parent.OnDamageDealt(damage);
                 // Debug.Log($"[Server] Hit {hit.name} for {damage}");            
