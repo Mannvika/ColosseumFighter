@@ -1797,11 +1797,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac1c4f9ea367fcf41931241c4d401733, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AbilityHUD
-  abilitySlots:
-  - abilityRef: {fileID: 11400000, guid: ba1990c4237cfd640a7fc246c325adfa, type: 2}
-    barRect: {fileID: 279524252}
-  - abilityRef: {fileID: 11400000, guid: b794e57342776dc41a03f08d29981bb4, type: 2}
-    barRect: {fileID: 1696241772}
+  abilitySlots: []
+  dashBar: {fileID: 279524252}
+  primaryBar: {fileID: 1696241772}
   blockBar: {fileID: 332767833}
   signatureBar: {fileID: 812634702}
 --- !u!1 &1485681600

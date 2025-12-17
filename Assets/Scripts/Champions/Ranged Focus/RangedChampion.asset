@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70298d80c1ca68b4e89d3fbac4ed609a, type: 3}
   m_Name: RangedChampion
   m_EditorClassIdentifier: Assembly-CSharp::Champion
-  championName: Prototype
+  championName: Ranged
   maxHealth: 500
   moveSpeed: 5
   acceleration: 50
-  dashAbility: {fileID: 11400000, guid: ba1990c4237cfd640a7fc246c325adfa, type: 2}
+  dashAbility: {fileID: 11400000, guid: e15636be0c03ede42806dbda7db08aac, type: 2}
   blockAbility: {fileID: 11400000, guid: d5492f9eeb446f0498cdd647ff994d86, type: 2}
   meleeAttack: {fileID: 11400000, guid: a87c8ffd9fabb7446be318bcf6e8d962, type: 2}
   primaryAbility: {fileID: 11400000, guid: b794e57342776dc41a03f08d29981bb4, type: 2}
-  signatureAbility: {fileID: 11400000, guid: a4a816d318ee5af4ea761cf01eb75799, type: 2}
+  signatureAbility: {fileID: 11400000, guid: ae3c306801f9cb64da5cf43b0808d279, type: 2}
   projectileAbility: {fileID: 11400000, guid: a87c8ffd9fabb7446be318bcf6e8d962, type: 2}

@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a4a32feb23fc0cc4db0a77e7d74dfad6, type: 3}
-  m_Name: Ranged_StatBoost
-  m_EditorClassIdentifier: Assembly-CSharp::RangedStatBoost
-  cooldown: 5
+  m_Script: {fileID: 11500000, guid: fe0741ca7223c7042ac5c3bdda0383f3, type: 3}
+  m_Name: RangedDash
+  m_EditorClassIdentifier: Assembly-CSharp::DashAbility
+  cooldown: 0.75
   stopMovementOnActivate: 0
   allowRotation: 1
   moveSpeedMultiplier: 1
   startCooldownOnEnd: 1
-  damageMultiplier: 1.3
-  numberOfShots: 3
+  dashSpeed: 65
+  dashDuration: 0.25

@@ -45,7 +45,7 @@ public class PlayerAbilitySystem
         {
             if (_controller.Movement.IsDashFinished(_controller.CurrentTick, champion.dashAbility.dashDuration, Time.fixedDeltaTime))
             {
-                champion.dashAbility.OnEnd(_controller, _controller.IsServer);
+                EndAbility(champion.dashAbility);
             }
             return; 
         }

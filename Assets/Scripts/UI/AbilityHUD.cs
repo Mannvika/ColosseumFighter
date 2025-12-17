@@ -12,8 +12,12 @@ public class AbilityHUD : MonoBehaviour
         public RectTransform barRect;   
     }
 
-    [Header("Cooldowns")]
     public List<AbilitySlot> abilitySlots = new List<AbilitySlot>();
+
+
+    [Header("Cooldowns")]
+    public RectTransform dashBar;
+    public RectTransform primaryBar;
 
     [Header("Charge Bars")]
     public RectTransform blockBar;    
@@ -35,8 +39,12 @@ public class AbilityHUD : MonoBehaviour
 
         _localPlayer = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerController>();
 
-        _localPlayer._abilitySystem.OnCooldownStarted += HandleCooldown;
+        abilitySlots.Clear();
 
+        abilitySlots.Add(new AbilitySlot { abilityRef = _localPlayer.championData.dashAbility, barRect = dashBar });
+        abilitySlots.Add(new AbilitySlot { abilityRef = _localPlayer.championData.primaryAbility, barRect = primaryBar });
+
+        _localPlayer._abilitySystem.OnCooldownStarted += HandleCooldown;
         _localPlayer.Resources.BlockCharge.OnValueChanged += UpdateBlockUI;
         _localPlayer.Resources.SignatureCharge.OnValueChanged += UpdateSignatureUI;
 
@@ -60,7 +68,9 @@ public class AbilityHUD : MonoBehaviour
 
         foreach (var slot in abilitySlots)
         {
-            if (slot.abilityRef.name == cleanName)
+            Debug.Log(slot.abilityRef.name + " - " + cleanName);
+            Debug.Log(slot.abilityRef.name == cleanName);
+            if (slot.abilityRef == ability)
             {
                 StartCoroutine(AnimateScale(slot.barRect, duration));
                 return;

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cd2fb22cac993914d9dee7757c270455, type: 3}
-  m_Name: Ranged_Block
+  m_Name: RangedBlock
   m_EditorClassIdentifier: Assembly-CSharp::BlockAbility
   cooldown: 0
   moveMultiplier: 0.5
