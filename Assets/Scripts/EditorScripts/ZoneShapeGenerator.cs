@@ -38,6 +38,11 @@ public class ZoneShapeGenerator : MonoBehaviour
             poly.pathCount = 1;
             poly.SetPath(0, GenerateStandardPoints());
         }
+
+        if (TryGetComponent<ZoneVisuals>(out var visuals))
+        {
+            visuals.UpdateParticlesToCollider();
+        }
     }
 
     // Helper for simple circles (used for both the outer ring and the hole)
