@@ -42,6 +42,8 @@ public class PlayerController : NetworkBehaviour
     private PlayerNetworkInputData[] _inputBuffer = new PlayerNetworkInputData[BUFFER_SIZE];
     private SimulationState[] _stateBuffer = new SimulationState[BUFFER_SIZE];
 
+    public bool isPredicting {get; private set; }
+
     private struct SimulationState
     {
         public Vector2 Position;
@@ -100,7 +102,9 @@ public class PlayerController : NetworkBehaviour
             PlayerNetworkInputData input = _inputHandler.CurrentInput;
             input.Tick = CurrentTick;
 
+            isPredicting = true;
             ProcessPlayerSimulation(input);
+            isPredicting = false;
             ProcessInputServerRpc(input);
 
             _inputHandler.ResetInputs();
@@ -157,6 +161,7 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     private void ProcessInputServerRpc(PlayerNetworkInputData input)
     {
+        isPredicting = false;
         CurrentTick = input.Tick;
         ProcessPlayerSimulation(input);
 
@@ -201,6 +206,8 @@ public class PlayerController : NetworkBehaviour
 
             // Replay Inputs
             int tickToReprocess = serverState.Tick + 1;
+
+            isPredicting = true;
             while (tickToReprocess < CurrentTick)
             {
                 int replayIndex = tickToReprocess % BUFFER_SIZE;
@@ -228,6 +235,7 @@ public class PlayerController : NetworkBehaviour
 
                 tickToReprocess++;
             }
+            isPredicting = false;
         }
     }
 

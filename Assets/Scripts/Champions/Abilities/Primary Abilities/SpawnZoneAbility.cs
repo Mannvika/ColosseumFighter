@@ -17,6 +17,9 @@ public class SpawnZoneAbility : AbilityBase
     public override void Activate(PlayerController parent, bool isServer)
     {
         parent.currentState = PlayerState.Normal;
+
+        if(parent.isPredicting) return;
+
         if (isServer)
         {
             SpawnZone(parent);
