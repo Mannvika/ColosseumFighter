@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2836249326986314453
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2899085231981317365}
+  m_Layer: 6
+  m_Name: VisualSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2899085231981317365
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2836249326986314453}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.59, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2271541734192629203}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4642004096300384400
 GameObject:
   m_ObjectHideFlags: 0
@@ -17,6 +48,7 @@ GameObject:
   - component: {fileID: 6659808602921238528}
   - component: {fileID: -39208097517059577}
   - component: {fileID: 4039933249097515112}
+  - component: {fileID: 883416428893306710}
   - component: {fileID: 8119172291975326487}
   - component: {fileID: 3585520545575197075}
   - component: {fileID: 6552562159868324239}
@@ -39,7 +71,8 @@ Transform:
   m_LocalPosition: {x: -0.24932, y: -4.92674, z: 0}
   m_LocalScale: {x: 0.7081, y: 0.7642, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 2899085231981317365}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1351538026526818916
@@ -168,6 +201,7 @@ MonoBehaviour:
   championData: {fileID: 11400000, guid: 6e050b8057f3b1141bcf628acdac9fbf, type: 2}
   Movement: {fileID: 1505180182191996178}
   Resources: {fileID: 6659808602921238528}
+  Visuals: {fileID: 0}
   currentState: 0
   currentActiveAbility: {fileID: 0}
   POSITION_TOLERANCE: 1
@@ -413,6 +447,21 @@ MonoBehaviour:
       m_Action: Signature
       m_Flags: 0
     m_Flags: 0
+--- !u!114 &883416428893306710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4642004096300384400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 611662849a64dc54e9770686d7435879, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerVisuals
+  ShowTopMostFoldoutHeaderGroup: 1
+  _playerController: {fileID: 0}
+  visualSpawnPoint: {fileID: 2899085231981317365}
 --- !u!114 &8119172291975326487
 MonoBehaviour:
   m_ObjectHideFlags: 0

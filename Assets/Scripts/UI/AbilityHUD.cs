@@ -44,7 +44,7 @@ public class AbilityHUD : MonoBehaviour
         abilitySlots.Add(new AbilitySlot { abilityRef = _localPlayer.championData.dashAbility, barRect = dashBar });
         abilitySlots.Add(new AbilitySlot { abilityRef = _localPlayer.championData.primaryAbility, barRect = primaryBar });
 
-        _localPlayer._abilitySystem.OnCooldownStarted += HandleCooldown;
+        _localPlayer.AbilitySystem.OnCooldownStarted += HandleCooldown;
         _localPlayer.Resources.BlockCharge.OnValueChanged += UpdateBlockUI;
         _localPlayer.Resources.SignatureCharge.OnValueChanged += UpdateSignatureUI;
 
@@ -56,7 +56,7 @@ public class AbilityHUD : MonoBehaviour
     {
         if (_localPlayer != null)
         {
-           _localPlayer._abilitySystem.OnCooldownStarted -= HandleCooldown;
+           _localPlayer.AbilitySystem.OnCooldownStarted -= HandleCooldown;
            _localPlayer.Resources.BlockCharge.OnValueChanged -= UpdateBlockUI;
            _localPlayer.Resources.SignatureCharge.OnValueChanged -= UpdateSignatureUI;
         }

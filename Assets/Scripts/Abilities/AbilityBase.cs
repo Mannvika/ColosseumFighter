@@ -7,6 +7,7 @@ public abstract class AbilityBase : ScriptableObject
     public bool allowRotation = true;
     public float moveSpeedMultiplier = 1.0f;
     public bool startCooldownOnEnd = false;
+    public GameObject visualsPrefab = null;
 
     public abstract void Activate(PlayerController parent, bool isServer);
 

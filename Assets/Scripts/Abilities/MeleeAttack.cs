@@ -10,6 +10,19 @@ public class MeleeAttack : AbilityBase
     public LayerMask hitLayers;
     public override void Activate(PlayerController parent, bool isServer)
     {
+        Vector2 dir = (parent.CurrentInputMovement == Vector2.zero) 
+                  ? (Vector2)parent.transform.up 
+                  : parent.CurrentInputMovement.normalized;
+
+        if (parent.Visuals != null)
+        {
+            parent.Visuals.TriggerAbilityVisual(
+                PlayerVisuals.VisualSlot.Melee, 
+                visualsPrefab, 
+                dir
+            );
+        }
+
         Debug.Log("Attacked");
 
         Vector2 origin = GetOrigin(parent);

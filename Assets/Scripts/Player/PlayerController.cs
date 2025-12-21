@@ -23,9 +23,10 @@ public class PlayerController : NetworkBehaviour
     [Header("Sub-Systems")]
     public PlayerMovement Movement;
     public PlayerResources Resources;
+    public PlayerVisuals Visuals;
     public StatSystem Stats = new StatSystem();
     private PlayerInputHandler _inputHandler;
-    public PlayerAbilitySystem _abilitySystem;
+    public PlayerAbilitySystem AbilitySystem;
 
     [Header("State")]
     public PlayerState currentState = PlayerState.Normal;
@@ -43,6 +44,7 @@ public class PlayerController : NetworkBehaviour
     private SimulationState[] _stateBuffer = new SimulationState[BUFFER_SIZE];
 
     public bool isPredicting {get; private set; }
+    public bool isRollingBack {get; private set; }
 
     private struct SimulationState
     {
@@ -72,10 +74,11 @@ public class PlayerController : NetworkBehaviour
         _inputHandler = GetComponent<PlayerInputHandler>();
         Movement = GetComponent<PlayerMovement>();
         Resources = GetComponent<PlayerResources>();
+        Visuals = GetComponent<PlayerVisuals>();
         
         Movement.Initialize(this, _rb);
         Resources.Initialize(this);
-        _abilitySystem = new PlayerAbilitySystem(this);
+        AbilitySystem = new PlayerAbilitySystem(this);
 
         Time.fixedDeltaTime = TICK_RATE;
 
@@ -130,7 +133,7 @@ public class PlayerController : NetworkBehaviour
 
         // 2. Process Logic (Abilities & State Transitions)
         // Delegated to Ability System
-        _abilitySystem.ProcessInput(input);
+        AbilitySystem.ProcessInput(input);
 
         // 3. Process Physics
         // Calculate multipliers based on Active Ability
@@ -204,17 +207,20 @@ public class PlayerController : NetworkBehaviour
             Stats.SetState(serverState.Stats); // Usually you want server stats here? 
                                                   // Ideally Stats should be in StatePayload too if they affect physics significantly.
 
+
+
             // Replay Inputs
             int tickToReprocess = serverState.Tick + 1;
 
             isPredicting = true;
+            isRollingBack = true;
             while (tickToReprocess < CurrentTick)
             {
                 int replayIndex = tickToReprocess % BUFFER_SIZE;
                 PlayerNetworkInputData replayInput = _inputBuffer[replayIndex];
 
                 // A. Process Logic
-                _abilitySystem.ProcessInput(replayInput);
+                AbilitySystem.ProcessInput(replayInput);
 
                 // B. Process Physics
                 float moveMult = currentActiveAbility != null ? currentActiveAbility.moveSpeedMultiplier : 1f;
@@ -236,14 +242,15 @@ public class PlayerController : NetworkBehaviour
                 tickToReprocess++;
             }
             isPredicting = false;
+            isRollingBack = false;
         }
     }
 
     // --- Helper Methods for External Systems (Abilities) ---
 
     // Called by Abilities to set cooldowns
-    public void SetAbilityCooldown(AbilityBase ability) => _abilitySystem.SetCooldown(ability);
-    public bool IsAbilityOnCooldown(AbilityBase ability) => _abilitySystem.IsOnCooldown(ability);
+    public void SetAbilityCooldown(AbilityBase ability) => AbilitySystem.SetCooldown(ability);
+    public bool IsAbilityOnCooldown(AbilityBase ability) => AbilitySystem.IsOnCooldown(ability);
 
     // Called by PlayerMovement
     public void SetDashDirection(Vector2 dir) => Movement.StartDash(dir);
