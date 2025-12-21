@@ -41,7 +41,7 @@ public class ZoneShapeGenerator : MonoBehaviour
 
         if (TryGetComponent<ZoneVisuals>(out var visuals))
         {
-            visuals.UpdateParticlesToCollider();
+            visuals.UpdateVisuals();
         }
     }
 

@@ -17,7 +17,7 @@ MonoBehaviour:
   allowRotation: 1
   moveSpeedMultiplier: 1
   startCooldownOnEnd: 1
-  zonePrefab: {fileID: 1321658038337639861, guid: f5e1d2868dc93fc458024f66d0f11842, type: 3}
+  zonePrefab: {fileID: 8041706730237773072, guid: d4b138178fe26c54484da86d67c8c578, type: 3}
   damagePerTick: 5
   duration: 8
   tickRate: 0.5
