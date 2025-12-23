@@ -19,7 +19,8 @@ public class MeleeAttack : AbilityBase
             parent.Visuals.TriggerAbilityVisual(
                 PlayerVisuals.VisualSlot.Melee, 
                 visualsPrefab, 
-                dir
+                dir,
+                this.cooldown
             );
         }
 

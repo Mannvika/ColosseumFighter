@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4769ae62ac4746345818556d8be3682e, type: 3}
   m_Name: Melee MeleeAttack
   m_EditorClassIdentifier: Assembly-CSharp::MeleeAttack
-  cooldown: 0.05
+  cooldown: 0.2
   stopMovementOnActivate: 0
   allowRotation: 1
   moveSpeedMultiplier: 1

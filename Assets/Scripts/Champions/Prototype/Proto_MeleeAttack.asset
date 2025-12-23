@@ -13,6 +13,11 @@ MonoBehaviour:
   m_Name: Proto_MeleeAttack
   m_EditorClassIdentifier: Assembly-CSharp::MeleeAttack
   cooldown: 0
+  stopMovementOnActivate: 0
+  allowRotation: 1
+  moveSpeedMultiplier: 1
+  startCooldownOnEnd: 0
+  visualsPrefab: {fileID: 4322976575743274888, guid: 671da9cbd0b2c7442bdf2b73f50a5a12, type: 3}
   damage: 23
   offsetDistance: 0
   hitboxSize: {x: 2, y: 2}
