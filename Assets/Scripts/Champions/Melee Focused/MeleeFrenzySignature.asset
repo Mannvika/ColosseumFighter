@@ -16,9 +16,10 @@ MonoBehaviour:
   stopMovementOnActivate: 0
   allowRotation: 1
   moveSpeedMultiplier: 1
-  startCooldownOnEnd: 0
+  startCooldownOnEnd: 1
+  visualsPrefab: {fileID: 0}
   maxCharge: 100
   chargePerSecond: 5
   chargePerDamageDealt: 4
   chargePerDamageTaken: 2
-  abilityToCast: {fileID: 11400000, guid: f182f4f0851bdbe44b2b28827a3db5fe, type: 2}
+  abilityToCast: {fileID: 11400000, guid: c77185139a62e3b44bad98306a4ce1f7, type: 2}

@@ -85,6 +85,7 @@ public class PlayerAbilitySystem
 
         if (_controller.currentState == PlayerState.Blocking && targetState != PlayerState.Blocking)
         {
+            
             EndAbility(_controller.championData.blockAbility);
         }
         else if (_controller.currentState == PlayerState.Firing && targetState != PlayerState.Firing)

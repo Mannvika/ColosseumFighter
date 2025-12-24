@@ -461,7 +461,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVisuals
   ShowTopMostFoldoutHeaderGroup: 1
   _playerController: {fileID: 0}
+  sprite: {fileID: 0}
   visualSpawnPoint: {fileID: 2899085231981317365}
+  InitialColor: {r: 0, g: 0, b: 0, a: 0}
+  blockingColor: {r: 0.3962264, g: 0.3890535, b: 0.37940547, a: 1}
 --- !u!114 &8119172291975326487
 MonoBehaviour:
   m_ObjectHideFlags: 0

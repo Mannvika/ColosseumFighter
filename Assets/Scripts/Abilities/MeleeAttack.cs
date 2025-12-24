@@ -20,11 +20,12 @@ public class MeleeAttack : AbilityBase
                 PlayerVisuals.VisualSlot.Melee, 
                 visualsPrefab, 
                 dir,
-                this.cooldown
+                this.cooldown,
+                this.hitboxSize
             );
         }
 
-        Debug.Log("Attacked");
+        //sDebug.Log("Attacked");
 
         Vector2 origin = GetOrigin(parent);
         DebugExtensions.DrawBox(origin, hitboxSize, parent.transform.eulerAngles.z, Color.red, 0.2f);
@@ -49,8 +50,8 @@ public class MeleeAttack : AbilityBase
             if(hit.TryGetComponent<IDamageable>(out IDamageable target))
             {
                 float finalDamage = parent.Stats.GetStat(StatType.Damage, damage);
-                target.TakeDamage(damage); 
-                parent.OnDamageDealt(damage);
+                target.TakeDamage(finalDamage); 
+                parent.OnDamageDealt(finalDamage);
                 // Debug.Log($"[Server] Hit {hit.name} for {damage}");            
             }
         }

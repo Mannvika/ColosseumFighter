@@ -80,7 +80,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_Sprite: {fileID: -2413806693520163455, guid: 4adeaf2d2b1c7417e89f026626d8264f, type: 3}
   m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TransientVisual
   _desiredDuration: 3
-  _startScale: {x: 1, y: 2, z: 1}
-  _endScale: {x: 0.4, y: 0.4, z: 1}
+  StartScale: {x: 0, y: 0, z: 0}
+  EndScale: {x: 0, y: 0, z: 0}
   _renderer: {fileID: 6563018546045193501}
   _tolerance: 0.0005

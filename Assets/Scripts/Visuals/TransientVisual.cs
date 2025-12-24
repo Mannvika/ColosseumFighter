@@ -4,8 +4,8 @@ using System.Collections;
 public class TransientVisual : MonoBehaviour
 {
     [SerializeField] private float _desiredDuration = 0.25f; 
-    [SerializeField] private Vector3 _startScale;
-    [SerializeField] private Vector3 _endScale;
+    public Vector3 StartScale;
+    public Vector3 EndScale;
     [SerializeField] private SpriteRenderer _renderer;
 
     [SerializeField] private float _tolerance = 0.05f;
@@ -31,7 +31,7 @@ public class TransientVisual : MonoBehaviour
         Color startColor = _renderer.color;
         Color endColor = new(startColor.r, startColor.g, startColor.b, 0f);
 
-        transform.localScale = _startScale;
+        transform.localScale = StartScale;
         _renderer.color = startColor;
 
         while (timer < duration)
@@ -39,7 +39,7 @@ public class TransientVisual : MonoBehaviour
             timer += Time.deltaTime;
             float t = timer / duration;
 
-            transform.localScale = Vector3.Lerp(_startScale, _endScale, t);
+            transform.localScale = Vector3.Lerp(StartScale, EndScale, t);
             _renderer.color = Color.Lerp(startColor, endColor, t);
 
             yield return null;
