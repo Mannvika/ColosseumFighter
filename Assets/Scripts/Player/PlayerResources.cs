@@ -16,7 +16,7 @@ public class PlayerResources : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (IsServer)
+        if (IsServer && _controller.championData != null)
         {
             BlockCharge.Value = _controller.championData.blockAbility.maxCharge;
         }
@@ -24,7 +24,7 @@ public class PlayerResources : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsServer || _controller == null) return;
+        if (!IsServer || _controller == null || _controller.championData == null) return;
         
         HandleBlockCharge();
         HandleSignatureCharge();

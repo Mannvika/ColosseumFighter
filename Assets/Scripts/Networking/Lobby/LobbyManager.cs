@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Netcode;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class LobbyManager : NetworkBehaviour
@@ -10,6 +11,11 @@ public class LobbyManager : NetworkBehaviour
     [SerializeField]
     private string gameSceneName = "GameScene";
 
+    [Header("UI References")]
+    [SerializeField] private Button char1Btn;     // Button for Champion 0
+    [SerializeField] private Button char2Btn;     // Button for Champion 1
+    [SerializeField] private Button startGameBtn; // Only visible to Host
+
     void Awake()
     {
         players = new NetworkList<LobbyPlayerData>();
@@ -17,6 +23,10 @@ public class LobbyManager : NetworkBehaviour
 
     void Start()
     {
+        char1Btn.onClick.AddListener(() => SelectChampion(0));
+        char2Btn.onClick.AddListener(() => SelectChampion(1));
+        startGameBtn.onClick.AddListener(StartGame);
+        startGameBtn.gameObject.SetActive(false);
         players.OnListChanged += HandleLobbyPlayersStateChanged;
     }
 
@@ -31,7 +41,9 @@ public class LobbyManager : NetworkBehaviour
         if (IsServer)
         {
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;            
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;    
+
+            OnClientConnected(NetworkManager.Singleton.LocalClientId);        
         }
     }
 
@@ -43,6 +55,7 @@ public class LobbyManager : NetworkBehaviour
         {
             clientID = clientID,
             isReady = false,
+            championId = -1,
             playerName = $"Player {players.Count + 1}"
         };
 
@@ -64,45 +77,42 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
-    public void ToggleReady()
+    public void SelectChampion(int championId)
     {
-        if(IsClient)
-        {
-            ToggleReadyServerRpc();
-        }
+        SelectChampionServerRpc(championId);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    private void ToggleReadyServerRpc(ServerRpcParams serverRpcParams = default)
+    [ServerRpc(RequireOwnership = false)]    
+    private void SelectChampionServerRpc(int championId, ServerRpcParams serverRpcParams = default)
     {
-        ulong clientID = serverRpcParams.Receive.SenderClientId;
+        ulong senderId = serverRpcParams.Receive.SenderClientId;
+
         for (int i = 0; i < players.Count; i++)
         {
-            if (players[i].clientID == clientID)
+            if (players[i].clientID == senderId)
             {
                LobbyPlayerData player = players[i];
-               player.isReady = !player.isReady;
-
+               player.championId = championId;
+               player.isReady = true;
                players[i] = player;
-
-               CheckIfGameCanStart();
                break;
             }
         }
     }
 
-    private void CheckIfGameCanStart()
-    {
-        if(players.Count < minPlayersToStart) return;
-        foreach(var player in players)
-        {
-            if(!player.isReady) return;
-        }
-        StartGame();
-    }
-
     private void StartGame()
     {
+        bool allReady = true;
+        foreach(var p in players) { if(!p.isReady) allReady = false; }
+        if(!allReady || players.Count < minPlayersToStart) return;
+
+        GameSessionData.Clear();
+
+        foreach (var player in players)
+        {
+            GameSessionData.CharacterSelections[player.clientID] = player.championId;
+        }
+
         NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
     }
 
@@ -113,10 +123,15 @@ public class LobbyManager : NetworkBehaviour
 
     private void UpdateLobbyUI()
     {
-        Debug.Log("Lobby Updated!");
-        foreach(var player in players)
+        bool allReady = players.Count >= minPlayersToStart;
+
+        foreach(var p in players)
         {
-            Debug.Log($"Player {player.clientID}: {(player.isReady ? "READY" : "NOT READY")}");
+            if (!p.isReady) allReady = false;
+            
+            Debug.Log($"Player {p.clientID} selected Champ {p.championId} is {(p.isReady ? "READY" : "WAITING")}");
         }
+
+        startGameBtn.gameObject.SetActive(IsServer && allReady);
     }
 }

@@ -42,6 +42,12 @@ public class AbilityHUD : MonoBehaviour
             yield return null;
         }
         _localPlayer = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerController>();
+
+        while (_localPlayer.championData == null)
+        {
+            yield return null;
+        }
+
         SetUpLocalPlayerUI();
 
         while(_enemyPlayer == null)

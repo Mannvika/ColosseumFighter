@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
-using System;
 public enum PlayerState
 {
     Normal,
@@ -17,8 +15,11 @@ public enum PlayerState
 [RequireComponent(typeof(PlayerResources))]
 public class PlayerController : NetworkBehaviour
 {
+    public NetworkVariable<bool> isPlayerActive = new NetworkVariable<bool>(false);
+    
     [Header("Data")]
     public Champion championData;
+    public NetworkVariable<int> championId = new NetworkVariable<int>(0);
     
     [Header("Sub-Systems")]
     public PlayerMovement Movement;
@@ -30,7 +31,7 @@ public class PlayerController : NetworkBehaviour
 
     [Header("State")]
     public PlayerState currentState = PlayerState.Normal;
-    public AbilityBase currentActiveAbility; // Currently executing ability
+    public AbilityBase currentActiveAbility;
     public Vector2 CurrentInputMovement { get; private set; }
 
 
@@ -56,7 +57,6 @@ public class PlayerController : NetworkBehaviour
 
     private bool initialized = false;
 
-    // Tick Logic
     public int CurrentTick { get; private set; } = 0;
     private float _timer;
     private const float TICK_RATE = 1f / 60f;
@@ -65,11 +65,12 @@ public class PlayerController : NetworkBehaviour
 
     private void Awake()
     {
-        //enabled = false;
+        enabled = false;
     }
 
     public override void OnNetworkSpawn()
     {
+        // 1. ALWAYS initialize local components (Fixes Teleport crash)
         _rb = GetComponent<Rigidbody2D>();
         _inputHandler = GetComponent<PlayerInputHandler>();
         Movement = GetComponent<PlayerMovement>();
@@ -79,17 +80,100 @@ public class PlayerController : NetworkBehaviour
         Movement.Initialize(this, _rb);
         Resources.Initialize(this);
         AbilitySystem = new PlayerAbilitySystem(this);
+        
+        // 2. Setup Network Variables
+        championId.OnValueChanged += OnChampionChanged;
+        isPlayerActive.OnValueChanged += OnActiveStateChanged;
 
-        Health health = GetComponent<Health>();
-        if (IsServer && health != null)
+        // 3. Try loading data safely (Fixes Data crash)
+        // If GameManager exists (Game Scene), load now. 
+        // If not (Lobby Scene), we wait for the GameManager to poke us later.
+        if (GameManager.instance != null)
         {
-            health.currentHealth.Value = championData.maxHealth;
+            LoadChampionData(championId.Value);
+            
+            // Server-side health init
+            Health health = GetComponent<Health>();
+            if (IsServer && health != null && championData != null)
+            {
+                health.currentHealth.Value = championData.maxHealth;
+            }
         }
+        else
+        {
+            // Safety: Disable script until we are officially active
+            enabled = false; 
+        }
+
+        // 4. Time Setup
         Time.fixedDeltaTime = TICK_RATE;
-
-        //enabled = true;
-
         initialized = true;
+
+        // 5. Initial State Check
+        // If we join late and player is already active, this ensures we are visible
+        if(isPlayerActive.Value)
+        {
+            TogglePlayerSpawnState(true);
+        }
+        else
+        {
+            TogglePlayerSpawnState(false);
+        }
+    }
+
+    [ClientRpc]
+    public void TeleportClientRpc(Vector2 newPosition)
+    {
+        transform.position = newPosition;
+        _rb.position = newPosition;
+        _rb.linearVelocity = Vector2.zero;
+
+        for(int i=0; i < _stateBuffer.Length; i++)
+        {
+            _stateBuffer[i].Position = newPosition;
+        }
+        
+        CurrentInputMovement = Vector2.zero;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        championId.OnValueChanged -= OnChampionChanged;
+        isPlayerActive.OnValueChanged -= OnActiveStateChanged;
+    }
+
+    private void OnActiveStateChanged(bool oldVal, bool newVal)
+    {
+        TogglePlayerSpawnState(newVal);
+
+        enabled = newVal;
+    }
+
+    public void InitializeChampion(int index)
+    {
+        if(!IsServer) return;
+        championId.Value = index;
+    }
+
+    private void OnChampionChanged(int oldChampion, int newChampion)
+    {
+        LoadChampionData(newChampion);
+    }
+
+    public void LoadChampionData(int index)
+    {
+        if (GameManager.instance == null) return;
+        
+        if (index >= 0 && index < GameManager.instance.allChampions.Length)
+        {
+            championData = GameManager.instance.allChampions[index];
+            
+            // Re-initialize resources that depend on Champion Data
+            if(Resources != null && championData != null)
+            {
+                Resources.BlockCharge.Value = championData.blockAbility.maxCharge;
+            }
+        }
     }
 
     void FixedUpdate()
@@ -105,6 +189,8 @@ public class PlayerController : NetworkBehaviour
 
     private void RunSimulationTick()
     {
+        if(!initialized || championData == null) return;
+
         if (IsClient && IsOwner)
         {
             PlayerNetworkInputData input = _inputHandler.CurrentInput;
@@ -118,12 +204,8 @@ public class PlayerController : NetworkBehaviour
             _inputHandler.ResetInputs();
             CurrentTick++;
         }
-        // Server handles its own ticks via RPC processing usually, 
-        // but if Server is also a player (Host), separate logic is needed.
-        // For pure Server (Dedicated), it waits for RPC.
     }
 
-    // Core Logic Loop
     private void ProcessPlayerSimulation(PlayerNetworkInputData input)
     {
         if(!initialized) return;
@@ -133,15 +215,9 @@ public class PlayerController : NetworkBehaviour
 
         CurrentInputMovement = input.Movement;
 
-        // 1. Process Visuals (Rotation)
         Movement.RotateTowards(input.MousePosition);
 
-        // 2. Process Logic (Abilities & State Transitions)
-        // Delegated to Ability System
         AbilitySystem.ProcessInput(input);
-
-        // 3. Process Physics
-        // Calculate multipliers based on Active Ability
         float moveMult = 1f;
         bool stopMove = false;
         
@@ -153,10 +229,8 @@ public class PlayerController : NetworkBehaviour
         
         Movement.TickPhysics(input, moveMult, stopMove);
 
-        // 4. Update Tick Timer (Optional, if abilities use ticks internally)
         Stats.Tick();
 
-        // 5. Save State for Rollback
         _stateBuffer[bufferIndex] = new SimulationState
         {
             Position = _rb.position,
@@ -194,7 +268,6 @@ public class PlayerController : NetworkBehaviour
 
         float positionError = Vector2.Distance(serverState.Position, predictedState.Position);
         
-        // Dynamic Tolerance based on State
         float tolerance = POSITION_TOLERANCE;
         if (currentState == PlayerState.Dashing || serverState.State == PlayerState.Dashing)
             tolerance *= FAST_MOVEMENT_MULTIPLIER;
@@ -203,18 +276,11 @@ public class PlayerController : NetworkBehaviour
 
         if (positionError > tolerance || stateMismatch)
         {
-            // Debug.LogWarning($"Reconciling Tick {serverState.Tick}! Error: {positionError}");
-
-            // Snap to authoritative state
             _rb.position = serverState.Position;
             _rb.linearVelocity = serverState.Velocity;
             currentState = serverState.State;
-            Stats.SetState(serverState.Stats); // Usually you want server stats here? 
-                                                  // Ideally Stats should be in StatePayload too if they affect physics significantly.
+            Stats.SetState(serverState.Stats);
 
-
-
-            // Replay Inputs
             int tickToReprocess = serverState.Tick + 1;
 
             isPredicting = true;
@@ -224,24 +290,20 @@ public class PlayerController : NetworkBehaviour
                 int replayIndex = tickToReprocess % BUFFER_SIZE;
                 PlayerNetworkInputData replayInput = _inputBuffer[replayIndex];
 
-                // A. Process Logic
                 AbilitySystem.ProcessInput(replayInput);
 
-                // B. Process Physics
                 float moveMult = currentActiveAbility != null ? currentActiveAbility.moveSpeedMultiplier : 1f;
                 bool stopMove = currentActiveAbility != null && currentActiveAbility.stopMovementOnActivate;
                 Movement.TickPhysics(replayInput, moveMult, stopMove);
 
-                // C. Process Stats (Tick down cooldowns/buffs)
                 Stats.Tick(); 
 
-                // D. Update Buffer with corrected future
                 _stateBuffer[replayIndex] = new SimulationState
                 {
                     Position = transform.position,
                     Velocity = _rb.linearVelocity,
                     State = currentState,
-                    Stats = Stats.GetState() // Save the corrected stat state
+                    Stats = Stats.GetState()
                 };
 
                 tickToReprocess++;
@@ -251,19 +313,13 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    // --- Helper Methods for External Systems (Abilities) ---
-
-    // Called by Abilities to set cooldowns
     public void SetAbilityCooldown(AbilityBase ability) => AbilitySystem.SetCooldown(ability);
     public bool IsAbilityOnCooldown(AbilityBase ability) => AbilitySystem.IsOnCooldown(ability);
 
-    // Called by PlayerMovement
     public void SetDashDirection(Vector2 dir) => Movement.StartDash(dir);
     
-    // Called by Abilities
     public void OnDamageDealt(float damage) => Resources.AddSignatureCharge(damage);
 
-    // Forces a state exit (e.g. Shield running out of energy)
     public void ForceEndState(PlayerState stateToEnd)
     {
         if (currentState == stateToEnd)
@@ -274,7 +330,6 @@ public class PlayerController : NetworkBehaviour
     }
     public void SetInputActive(bool active)
     {
-        // Bridge to the Input Component
         if(_inputHandler != null)
         {
             _inputHandler.enabled = active;
@@ -284,23 +339,21 @@ public class PlayerController : NetworkBehaviour
 
     public void TogglePlayerSpawnState(bool isSpawned)
     {
-        // toggle visuals
         var sr = GetComponentInChildren<SpriteRenderer>();
         if(sr != null) sr.enabled = isSpawned;
 
-        // toggle physics body
         var col = GetComponent<Collider2D>();
         if(col != null) col.enabled = isSpawned;
 
-        // toggle input
-        SetInputActive(isSpawned);
+        if(IsOwner)
+        {
+            SetInputActive(isSpawned);
+        }
 
-        // Optional: Reset internal state
         if(isSpawned)
         {
             currentState = PlayerState.Normal;
-            Stats.Reset(); // If you want to reset buffs on respawn
-            // Health reset would go here too
+            Stats.Reset();
         }
     }
 }

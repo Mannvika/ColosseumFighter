@@ -9,6 +9,9 @@ public class GameManager : NetworkBehaviour
 
     public NetworkVariable<GameState> currentState = new NetworkVariable<GameState>(GameState.WaitingForPlayers);
 
+    [Header("Data Registry")]
+    public Champion[] allChampions;
+
     [Header("Setup")]
     public Transform[] spawnPoints;
 
@@ -50,61 +53,81 @@ public class GameManager : NetworkBehaviour
 
     private IEnumerator GameLoopRoutine()
     {
-        // Wait for connection stability / players to load
-        yield return new WaitForSeconds(1f);
+        // Wait until all connected players have a physical representation in the scene
+        yield return new WaitUntil(() => 
+            FindObjectsByType<PlayerController>(FindObjectsSortMode.None).Length >= NetworkManager.Singleton.ConnectedClientsIds.Count
+        );
+        
+        // Small buffer for stability
+        yield return new WaitForSeconds(0.5f);
 
-        // 1. Setup Phase
         InitializePlayers();
         currentState.Value = GameState.Countdown;
         
-        // 2. Countdown Phase
         yield return new WaitForSeconds(3f);
 
-        // 3. Fight Phase
         currentState.Value = GameState.Active;
     }
+
+    // In GameManager.cs
 
     void InitializePlayers()
     {
         players.Clear();
-        var foundPlayers = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        var connectedIds = NetworkManager.Singleton.ConnectedClientsIds;
         int index = 0;
 
-        foreach(var p in foundPlayers)
+        foreach (ulong id in connectedIds)
         {
-            // Register player in dictionary
-            if(!players.ContainsKey(p.OwnerClientId))
+            if (NetworkManager.Singleton.ConnectedClients.TryGetValue(id, out var client))
             {
-                players.Add(p.OwnerClientId, p);
+                if (client.PlayerObject == null) continue;
+
+                var p = client.PlayerObject.GetComponent<PlayerController>();
+                if (p == null) continue;
+
+                // 1. Force Load Champion Data (Fixes the NullRef on maxHealth)
+                if (GameSessionData.CharacterSelections.ContainsKey(id))
+                {
+                    int champIndex = GameSessionData.CharacterSelections[id];
+                    
+                    // Set the ID network variable
+                    p.InitializeChampion(champIndex); 
+                    
+                    // CRITICAL: Manually load the data locally on the Server immediately
+                    // This ensures 'p.championData' is not null for the next lines
+                    p.LoadChampionData(champIndex); 
+                }
+
+                // 2. Add to Dictionary
+                if (!players.ContainsKey(id)) players.Add(id, p);
+
+                // 3. Teleport
+                if (spawnPoints != null && index < spawnPoints.Length)
+                {
+                    // Now safe because _rb is initialized in PlayerController.OnNetworkSpawn
+                    p.TeleportClientRpc(spawnPoints[index].position);
+                }
+
+                // 4. Activate
+                p.isPlayerActive.Value = true;
+
+                // 5. Reset State (Server Only)
+                if (IsServer)
+                {
+                    // Now safe because we forced LoadChampionData above
+                    if (p.championData != null)
+                    {
+                        var healthScript = p.GetComponent<Health>();
+                        if (healthScript != null)
+                            healthScript.currentHealth.Value = p.championData.maxHealth;
+                    }
+                    
+                    if (p.Resources != null) p.Resources.ResetSignatureCharge();
+                }
+
+                index++;
             }
-
-            // Position player at spawn point
-            if(spawnPoints != null && index < spawnPoints.Length)
-            {
-                p.transform.position = spawnPoints[index].position;
-            }
-
-            // Reset Visuals and Input via the Facade methods we added to PlayerController
-            p.TogglePlayerSpawnState(true);
-            p.SetInputActive(false);
-
-            // Reset Health (Server Only)
-            if(IsServer)
-            {
-                 var healthScript = p.GetComponent<Health>();
-                 if(healthScript != null) 
-                 {
-                     healthScript.currentHealth.Value = p.championData.maxHealth;
-                 }
-                 
-                 // Optional: Reset other resources like Charge if needed
-                 if(p.Resources != null)
-                 {
-                     p.Resources.ResetSignatureCharge();
-                 }
-            }
-
-            index++;
         }
     }
 
@@ -148,36 +171,22 @@ public class GameManager : NetworkBehaviour
 
     private void OnStateChanged(GameState oldState, GameState newState)
     {
-        // Handle Global Updates (for all players locally)
+        Debug.Log($"Game State Changed: {newState}"); // Debug logging
+
         if (newState == GameState.Countdown || newState == GameState.Active)
         {
             var allPlayers = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
-            foreach(var p in allPlayers)
+            foreach (var p in allPlayers)
             {
-                // Ensure everyone is visible
                 p.TogglePlayerSpawnState(true);
                 
-                // If counting down, lock everyone's input
-                if (newState == GameState.Countdown) 
+                // Only lock/unlock if we are the OWNER of this player
+                if (p.IsOwner)
                 {
-                    p.SetInputActive(false);
+                    bool shouldEnableInput = (newState == GameState.Active);
+                    p.SetInputActive(shouldEnableInput);
+                    Debug.Log($"Setting Input Active: {shouldEnableInput}");
                 }
-            }
-        }
-
-        // Handle Local Player Input Locking
-        if(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject() != null)
-        {
-            var localPlayer = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<PlayerController>();
-            if (localPlayer == null) return;
-
-            if(newState == GameState.Active)
-            {
-                localPlayer.SetInputActive(true);
-            }
-            else if (newState == GameState.GameOver || newState == GameState.Countdown)
-            {
-                localPlayer.SetInputActive(false);
             }
         }
     }
