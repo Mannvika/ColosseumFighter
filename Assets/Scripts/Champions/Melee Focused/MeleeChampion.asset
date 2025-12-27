@@ -20,5 +20,5 @@ MonoBehaviour:
   blockAbility: {fileID: 11400000, guid: 24cbf02ef06a42a41b6048803945d97d, type: 2}
   meleeAttack: {fileID: 11400000, guid: 880d14961a9cc6e4fa7ebac15700c4fe, type: 2}
   primaryAbility: {fileID: 11400000, guid: d9bebf860f03167488b0c79c1029e865, type: 2}
-  signatureAbility: {fileID: 11400000, guid: 28b11387daa9a6543a7db57adb15a4e9, type: 2}
+  signatureAbility: {fileID: 11400000, guid: 5c6332d9da8dc2348a3ff4bc70ac3ea3, type: 2}
   projectileAbility: {fileID: 11400000, guid: 831a6666a01118d469eeb06001cd50a3, type: 2}

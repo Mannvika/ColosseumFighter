@@ -80,6 +80,11 @@ public class PlayerController : NetworkBehaviour
         Resources.Initialize(this);
         AbilitySystem = new PlayerAbilitySystem(this);
 
+        Health health = GetComponent<Health>();
+        if (IsServer && health != null)
+        {
+            health.currentHealth.Value = championData.maxHealth;
+        }
         Time.fixedDeltaTime = TICK_RATE;
 
         //enabled = true;

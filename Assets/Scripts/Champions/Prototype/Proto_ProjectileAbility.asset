@@ -17,6 +17,7 @@ MonoBehaviour:
   allowRotation: 1
   moveSpeedMultiplier: 1
   startCooldownOnEnd: 0
+  visualsPrefab: {fileID: 0}
   projectilePrefab: {fileID: 6782317319294876377, guid: 834c53621096f344fab6c9423d11752f, type: 3}
   projectileSpeed: 80
-  damage: 15
+  damage: 40
