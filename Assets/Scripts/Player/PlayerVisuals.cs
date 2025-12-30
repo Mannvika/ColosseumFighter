@@ -11,7 +11,7 @@ public class PlayerVisuals : NetworkBehaviour
 
     [HideInInspector]
     public Color InitialColor;
-    public Color blockingColor;
+    public Color blockingColor = Color.gray;
 
     public enum VisualSlot {Melee, Primary, Signature, Projectile, Blocking, Dashing};
 
@@ -26,6 +26,18 @@ public class PlayerVisuals : NetworkBehaviour
             sprite = GetComponent<SpriteRenderer>();
         }
         InitialColor = sprite.color;
+    }
+
+    private void Update()
+    {
+        if (_playerController.netState.Value == PlayerState.Blocking)
+        {
+            sprite.color = blockingColor;
+        }
+        else
+        {
+            sprite.color = InitialColor;
+        }
     }
 
     public void TriggerAbilityVisual(VisualSlot slot, GameObject prefab, Vector2 direction, float cooldown, Vector2 visualSize)

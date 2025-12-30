@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Netcode;
+using System.Collections;
 public enum PlayerState
 {
     Normal,
@@ -16,6 +17,8 @@ public enum PlayerState
 public class PlayerController : NetworkBehaviour
 {
     public NetworkVariable<bool> isPlayerActive = new NetworkVariable<bool>(false);
+
+    public event System.Action OnChampionDataLoaded;
     
     [Header("Data")]
     public Champion championData;
@@ -44,6 +47,8 @@ public class PlayerController : NetworkBehaviour
     private PlayerNetworkInputData[] _inputBuffer = new PlayerNetworkInputData[BUFFER_SIZE];
     private SimulationState[] _stateBuffer = new SimulationState[BUFFER_SIZE];
 
+    public NetworkVariable<PlayerState> netState = new NetworkVariable<PlayerState>(PlayerState.Normal);
+
     public bool isPredicting {get; private set; }
     public bool isRollingBack {get; private set; }
 
@@ -70,7 +75,6 @@ public class PlayerController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        // 1. ALWAYS initialize local components (Fixes Teleport crash)
         _rb = GetComponent<Rigidbody2D>();
         _inputHandler = GetComponent<PlayerInputHandler>();
         Movement = GetComponent<PlayerMovement>();
@@ -81,43 +85,45 @@ public class PlayerController : NetworkBehaviour
         Resources.Initialize(this);
         AbilitySystem = new PlayerAbilitySystem(this);
         
-        // 2. Setup Network Variables
         championId.OnValueChanged += OnChampionChanged;
         isPlayerActive.OnValueChanged += OnActiveStateChanged;
 
-        // 3. Try loading data safely (Fixes Data crash)
-        // If GameManager exists (Game Scene), load now. 
-        // If not (Lobby Scene), we wait for the GameManager to poke us later.
         if (GameManager.instance != null)
         {
             LoadChampionData(championId.Value);
-            
-            // Server-side health init
-            Health health = GetComponent<Health>();
-            if (IsServer && health != null && championData != null)
-            {
-                health.currentHealth.Value = championData.maxHealth;
-            }
+            InitializeHealth();
         }
         else
         {
-            // Safety: Disable script until we are officially active
-            enabled = false; 
+            Debug.LogWarning($"[PlayerController] GameManager not ready for {name} (NetId: {NetworkObjectId}). Queuing initialization...");
+            StartCoroutine(WaitForGameManagerAndInit());
         }
 
-        // 4. Time Setup
         Time.fixedDeltaTime = TICK_RATE;
         initialized = true;
 
-        // 5. Initial State Check
-        // If we join late and player is already active, this ensures we are visible
-        if(isPlayerActive.Value)
+        if(isPlayerActive.Value) TogglePlayerSpawnState(true);
+        else TogglePlayerSpawnState(false);
+    }
+
+    private IEnumerator WaitForGameManagerAndInit()
+    {
+        while (GameManager.instance == null)
         {
-            TogglePlayerSpawnState(true);
+            yield return null;
         }
-        else
+
+        Debug.Log($"[PlayerController] GameManager found! Delayed initialization for {name} (NetId: {NetworkObjectId})");
+        LoadChampionData(championId.Value);
+        InitializeHealth();
+    }
+
+    private void InitializeHealth()
+    {
+        Health health = GetComponent<Health>();
+        if (IsServer && health != null && championData != null)
         {
-            TogglePlayerSpawnState(false);
+            health.currentHealth.Value = championData.maxHealth;
         }
     }
 
@@ -162,18 +168,51 @@ public class PlayerController : NetworkBehaviour
 
     public void LoadChampionData(int index)
     {
-        if (GameManager.instance == null) return;
-        
-        if (index >= 0 && index < GameManager.instance.allChampions.Length)
+        // Debug 1: Confirm the method is actually called on the Client
+        Debug.Log($"[NetId: {NetworkObjectId} IsServer:{IsServer}] LoadChampionData called with index: {index}");
+
+        if (GameManager.instance == null)
         {
-            championData = GameManager.instance.allChampions[index];
-            
-            // Re-initialize resources that depend on Champion Data
-            if(Resources != null && championData != null)
-            {
-                Resources.BlockCharge.Value = championData.blockAbility.maxCharge;
-            }
+            // TRAP 1: Singleton is missing
+            Debug.LogError($"[NetId: {NetworkObjectId}] FAILED: GameManager.instance is NULL!");
+            return;
         }
+        
+        if (GameManager.instance.allChampions == null)
+        {
+            // TRAP 2: Array is null
+            Debug.LogError($"[NetId: {NetworkObjectId}] FAILED: GameManager.allChampions array is NULL!");
+            return;
+        }
+
+        if (index < 0 || index >= GameManager.instance.allChampions.Length)
+        {
+            // TRAP 3: Index is invalid (e.g., -1 if initialization failed)
+            Debug.LogError($"[NetId: {NetworkObjectId}] FAILED: Index {index} is out of bounds. Array Length: {GameManager.instance.allChampions.Length}");
+            return;
+        }
+
+        championData = GameManager.instance.allChampions[index];
+        
+        // Debug 2: Confirm local data assignment
+        Debug.Log($"[NetId: {NetworkObjectId}] SUCCESS: Set championData to {championData.name}");
+
+        if(IsServer && Resources != null && championData != null)
+        {
+            Resources.BlockCharge.Value = championData.blockAbility.maxCharge;
+        }
+
+        // Debug 3: Confirm event invocation
+        if (OnChampionDataLoaded != null)
+        {
+            Debug.Log($"[NetId: {NetworkObjectId}] Invoking OnChampionDataLoaded for {OnChampionDataLoaded.GetInvocationList().Length} listeners.");
+        }
+        else
+        {
+            Debug.LogWarning($"[NetId: {NetworkObjectId}] Invoking OnChampionDataLoaded but NO LISTENERS are subscribed yet.");
+        }
+
+        OnChampionDataLoaded?.Invoke();
     }
 
     void FixedUpdate()
@@ -203,6 +242,11 @@ public class PlayerController : NetworkBehaviour
 
             _inputHandler.ResetInputs();
             CurrentTick++;
+        }
+
+        if(IsServer)
+        {
+            netState.Value = currentState;
         }
     }
 

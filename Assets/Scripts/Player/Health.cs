@@ -28,7 +28,7 @@ public class Health : NetworkBehaviour, IDamageable
         currentHealth.Value -= amount * parent.Stats.GetStat(StatType.Defense, 1.0f);
 
         // Temp get related player controller object and increase charge
-        if(parent != null && parent.championData.signatureAbility != null && parent.championData.signatureAbility != null)
+        if(parent != null && parent.championData != null && parent.championData.signatureAbility != null)
         {
             parent.Resources.SignatureCharge.Value = Mathf.Min(parent.Resources.SignatureCharge.Value + amount * parent.championData.signatureAbility.chargePerDamageTaken, parent.championData.signatureAbility.maxCharge);
         }
